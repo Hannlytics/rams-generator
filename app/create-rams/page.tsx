@@ -29,13 +29,24 @@ const TASK_TYPES: { [key: string]: string[] } = {
   'Bricklayer': ['Wall construction', 'Pointing', 'Block work', 'Chimney work']
 }
 
-const COMMON_HAZARDS = {
-  'Working at Height': ['Falls from height', 'Dropped objects', 'Unstable surfaces'],
-  'Electrical': ['Electric shock', 'Burns', 'Arc flash', 'Fire'],
-  'Manual Handling': ['Back injury', 'Muscle strain', 'Crush injuries'],
-  'Power Tools': ['Cuts', 'Eye injury', 'Noise exposure', 'Vibration'],
-  'Hazardous Materials': ['Asbestos exposure', 'Lead paint', 'Chemical burns', 'Dust inhalation']
-}
+// Updated list of common hazards
+const COMMON_HAZARDS = [
+  "Working at Height",
+  "Electrical",
+  "Manual Handling",
+  "Power Tools / Equipment",
+  "Hazardous Substances (COSHH)",
+  "Slips, Trips and Falls",
+  "Noise & Vibration",
+  "Dust / Airborne Particles",
+  "Hot Works",
+  "Confined Spaces",
+  "Lone Working",
+  "Vehicular Movement",
+  "Fire / Emergency Risks",
+  "Public Interface (e.g., schools, retail)",
+  "Other / Custom Hazards"
+]
 
 const PPE_OPTIONS = [
   'Hard hat',
@@ -49,7 +60,6 @@ const PPE_OPTIONS = [
   'Face shield'
 ]
 
-// Define an interface for the API result
 interface RamsResult {
   content: string;
 }
@@ -75,7 +85,6 @@ export default function NewRams() {
 
   // UI state
   const [loading, setLoading] = useState(false)
-  // Use the new interface instead of <any>
   const [result, setResult] = useState<RamsResult | null>(null)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -274,21 +283,21 @@ export default function NewRams() {
               Common Hazards (select all that apply)
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
-              {Object.keys(COMMON_HAZARDS).map(category => (
-                <label key={category} className="flex items-center">
+              {COMMON_HAZARDS.map(hazard => (
+                <label key={hazard} className="flex items-center">
                   <input
                     type="checkbox"
-                    value={category}
+                    value={hazard}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedHazards([...selectedHazards, category])
+                        setSelectedHazards([...selectedHazards, hazard])
                       } else {
-                        setSelectedHazards(selectedHazards.filter(h => h !== category))
+                        setSelectedHazards(selectedHazards.filter(h => h !== hazard))
                       }
                     }}
                     className="mr-2"
                   />
-                  <span className="text-sm">{category}</span>
+                  <span className="text-sm">{hazard}</span>
                 </label>
               ))}
             </div>
