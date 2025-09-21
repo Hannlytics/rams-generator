@@ -342,7 +342,7 @@ export default function NewRams() {
 
         {/* PPE Section */}
         <div className="border-b pb-6">
-          <h2 className="text-xl font-semibold mb-4">PPE Requirements</h2>
+          <h2 className="text-xl font-semibold mb-4">PPE Requirements (select all that apply)</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {PPE_OPTIONS.map(ppe => (
               <label key={ppe} className="flex items-center">
