@@ -49,6 +49,11 @@ const PPE_OPTIONS = [
   'Face shield'
 ]
 
+// Define an interface for the API result
+interface RamsResult {
+  content: string;
+}
+
 export default function NewRams() {
   // Basic fields
   const [projectName, setProjectName] = useState('')
@@ -56,7 +61,7 @@ export default function NewRams() {
   const [siteAddress, setSiteAddress] = useState('')
   const [startDate, setStartDate] = useState('')
   const [duration, setDuration] = useState('')
-  
+
   // Enhanced fields
   const [trade, setTrade] = useState('')
   const [taskType, setTaskType] = useState('')
@@ -67,23 +72,24 @@ export default function NewRams() {
   const [siteManager, setSiteManager] = useState('')
   const [contactNumber, setContactNumber] = useState('')
   const [scopeOfWork, setScopeOfWork] = useState('')
-  
+
   // UI state
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  // Use the new interface instead of <any>
+  const [result, setResult] = useState<RamsResult | null>(null)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
-    
+
     const allHazards = [...selectedHazards, customHazards].filter(h => h).join(', ')
     const ppe = selectedPPE.join(', ')
-    
+
     try {
       const response = await fetch('/api/generate-rams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           projectName,
           clientName,
           siteAddress,
@@ -99,7 +105,7 @@ export default function NewRams() {
           scopeOfWork
         })
       })
-      
+
       const data = await response.json()
       setResult(data.data)
     } catch (error) {
@@ -116,7 +122,7 @@ export default function NewRams() {
         <div className="bg-white p-8 rounded-lg shadow-lg">
           <pre className="whitespace-pre-wrap font-sans">{result.content}</pre>
           <div className="mt-6 flex gap-4">
-            <button 
+            <button
               onClick={() => setResult(null)}
               className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
             >
@@ -144,8 +150,8 @@ export default function NewRams() {
               <label className="block text-sm font-medium mb-2">
                 Project Name <span className="text-red-500">*</span>
               </label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -158,8 +164,8 @@ export default function NewRams() {
               <label className="block text-sm font-medium mb-2">
                 Client Name <span className="text-red-500">*</span>
               </label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -171,8 +177,8 @@ export default function NewRams() {
               <label className="block text-sm font-medium mb-2">
                 Start Date <span className="text-red-500">*</span>
               </label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -184,8 +190,8 @@ export default function NewRams() {
               <label className="block text-sm font-medium mb-2">
                 Duration
               </label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -210,7 +216,7 @@ export default function NewRams() {
               <label className="block text-sm font-medium mb-2">
                 Trade <span className="text-red-500">*</span>
               </label>
-              <select 
+              <select
                 value={trade}
                 onChange={(e) => {
                   setTrade(e.target.value)
@@ -230,7 +236,7 @@ export default function NewRams() {
               <label className="block text-sm font-medium mb-2">
                 Task Type
               </label>
-              <select 
+              <select
                 value={taskType}
                 onChange={(e) => setTaskType(e.target.value)}
                 className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -248,10 +254,10 @@ export default function NewRams() {
             <label className="block text-sm font-medium mb-2">
               Scope of Work <span className="text-red-500">*</span>
             </label>
-            <textarea 
+            <textarea
               value={scopeOfWork}
               onChange={(e) => setScopeOfWork(e.target.value)}
-              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500" 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
               rows={3}
               placeholder="Describe the work to be carried out..."
               required
@@ -270,7 +276,7 @@ export default function NewRams() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
               {Object.keys(COMMON_HAZARDS).map(category => (
                 <label key={category} className="flex items-center">
-                  <input 
+                  <input
                     type="checkbox"
                     value={category}
                     onChange={(e) => {
@@ -292,10 +298,10 @@ export default function NewRams() {
             <label className="block text-sm font-medium mb-2">
               Additional Hazards
             </label>
-            <textarea 
+            <textarea
               value={customHazards}
               onChange={(e) => setCustomHazards(e.target.value)}
-              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500" 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
               rows={2}
               placeholder="Any other hazards specific to this job..."
             />
@@ -308,7 +314,7 @@ export default function NewRams() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {PPE_OPTIONS.map(ppe => (
               <label key={ppe} className="flex items-center">
-                <input 
+                <input
                   type="checkbox"
                   value={ppe}
                   onChange={(e) => {
@@ -331,10 +337,10 @@ export default function NewRams() {
           <label className="block text-sm font-medium mb-2">
             Control Measures <span className="text-red-500">*</span>
           </label>
-          <textarea 
+          <textarea
             value={controls}
             onChange={(e) => setControls(e.target.value)}
-            className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500" 
+            className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
             rows={4}
             placeholder="Describe how risks will be controlled..."
             required
@@ -349,8 +355,8 @@ export default function NewRams() {
               <label className="block text-sm font-medium mb-2">
                 Site Manager <span className="text-red-500">*</span>
               </label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={siteManager}
                 onChange={(e) => setSiteManager(e.target.value)}
                 className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -362,8 +368,8 @@ export default function NewRams() {
               <label className="block text-sm font-medium mb-2">
                 Contact Number <span className="text-red-500">*</span>
               </label>
-              <input 
-                type="tel" 
+              <input
+                type="tel"
                 value={contactNumber}
                 onChange={(e) => setContactNumber(e.target.value)}
                 className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -373,8 +379,8 @@ export default function NewRams() {
           </div>
         </div>
         
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={loading}
           className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 font-semibold"
         >
