@@ -41,6 +41,7 @@ export default function NewRams() {
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
               className="w-full px-4 py-2 border rounded"
+              placeholder="e.g., Office Renovation"
               required
             />
           </div>
@@ -52,7 +53,7 @@ export default function NewRams() {
               onChange={(e) => setHazards(e.target.value)}
               className="w-full px-4 py-2 border rounded" 
               rows={4}
-              placeholder="List the hazards..."
+              placeholder="e.g., Electrical work, dust, noise"
               required
             />
           </div>
@@ -64,7 +65,7 @@ export default function NewRams() {
               onChange={(e) => setControls(e.target.value)}
               className="w-full px-4 py-2 border rounded" 
               rows={4}
-              placeholder="Describe control measures..."
+              placeholder="e.g., Isolate power, PPE required, barriers in place"
               required
             />
           </div>
