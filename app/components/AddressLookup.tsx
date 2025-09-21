@@ -30,7 +30,7 @@ export default function AddressLookup({ value, onChange }: AddressLookupProps) {
       } else {
         alert('Postcode not found')
       }
-    } catch (error) {
+    } catch (err) {
       alert('Error looking up postcode')
     } finally {
       setLoading(false)
