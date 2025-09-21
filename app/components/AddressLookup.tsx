@@ -8,7 +8,6 @@ interface AddressLookupProps {
 
 export default function AddressLookup({ value, onChange }: AddressLookupProps) {
   const [postcode, setPostcode] = useState('')
-  const [suggestions, setSuggestions] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   
   const lookupPostcode = async () => {
@@ -21,15 +20,13 @@ export default function AddressLookup({ value, onChange }: AddressLookupProps) {
       if (data.status === 200) {
         const result = data.result
         const fullAddress = [
-          result.parliamentary_constituency,
-          result.admin_district,
           result.admin_ward,
+          result.admin_district, 
           result.postcode,
           result.country
         ].filter(Boolean).join('\n')
         
         onChange(fullAddress)
-        setSuggestions([]) // Clear suggestions after selection
       } else {
         alert('Postcode not found')
       }
