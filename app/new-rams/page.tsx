@@ -194,17 +194,11 @@ export default function NewRams() {
             </div>
           </div>
           
-  <div className="mt-4">
-    <label className="block text-sm font-medium mb-2">
-      Site Address <span className="text-red-500">*</span>
-    </label>
-    <textarea 
-      value={siteAddress}
-      onChange={(e) => setSiteAddress(e.target.value)}
-      className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500" 
-      rows={2}
-      required
-            />
+          <div className="mt-4">
+            <label className="block text-sm font-medium mb-2">
+              Site Address <span className="text-red-500">*</span>
+            </label>
+            <AddressLookup value={siteAddress} onChange={setSiteAddress} />
           </div>
         </div>
 
