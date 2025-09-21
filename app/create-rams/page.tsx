@@ -2,31 +2,50 @@
 import { useState, FormEvent } from 'react'
 import AddressLookup from '../components/AddressLookup'
 
-// Predefined options for UK construction
+// Updated list of trades
 const TRADES = [
   'General Builder',
   'Electrician',
   'Plumber',
-  'Roofer',
-  'Scaffolder',
+  'Bricklayer',
+  'Carpenter / Joiner',
+  'Painter & Decorator',
   'Plasterer',
-  'Carpenter',
-  'Painter/Decorator',
+  'Roofing Contractor',
   'Groundworker',
-  'Bricklayer'
+  'Scaffolder',
+  'Demolition Operative',
+  'Steel Erector',
+  'Floor Layer',
+  'Glazier',
+  'Tiler',
+  'Dryliner / Ceiling Fixer',
+  'Landscaper',
+  'HVAC Engineer',
+  'Cleaner (Post-construction)'
 ]
 
+// Updated and expanded list of tasks for each trade
 const TASK_TYPES: { [key: string]: string[] } = {
-  'General Builder': ['Extension work', 'Renovation', 'Structural alterations', 'General maintenance'],
-  'Electrician': ['Wiring installation', 'Consumer unit replacement', 'Socket installation', 'Lighting installation'],
-  'Plumber': ['Boiler installation', 'Pipe fitting', 'Bathroom installation', 'Radiator installation'],
-  'Roofer': ['Tile replacement', 'Flat roof repair', 'Gutter installation', 'Chimney repair'],
-  'Scaffolder': ['Erect scaffold', 'Dismantle scaffold', 'Scaffold inspection', 'Tower scaffold'],
-  'Plasterer': ['Wall plastering', 'Ceiling plastering', 'Rendering', 'Dry lining'],
-  'Carpenter': ['Door installation', 'Kitchen fitting', 'Flooring', 'Stud walls'],
-  'Painter/Decorator': ['Interior painting', 'Exterior painting', 'Wallpapering', 'Surface preparation'],
-  'Groundworker': ['Excavation', 'Drainage', 'Foundations', 'Paving'],
-  'Bricklayer': ['Wall construction', 'Pointing', 'Block work', 'Chimney work']
+  'General Builder': ['Small Extension', 'Refurbishment', 'Structural Repairs', 'General Maintenance'],
+  'Electrician': ['EICR', 'PAT Testing', 'New Circuit Installation', 'Fault Finding'],
+  'Plumber': ['Leak Repair', 'Central Heating Maintenance', 'Drainage', 'Gas Safety Certificate'],
+  'Bricklayer': ['Repointing', 'Feature Brickwork', 'Blockwork', 'Masonry Repairs'],
+  'Carpenter / Joiner': ['First Fix (Studwork)', 'Second Fix (Doors, Skirting)', 'Roof Trusses', 'Custom Joinery'],
+  'Painter & Decorator': ['Stripping Wallpaper', 'Surface Preparation', 'Woodwork Painting', 'Feature Wall Creation'],
+  'Plasterer': ['Skimming', 'Rendering', 'Plasterboarding', 'Coving Installation'],
+  'Roofing Contractor': ['Lead Flashing', 'Slate/Tile Repair', 'Felt Roofing', 'Gutter Clearing'],
+  'Groundworker': ['Site Clearance', 'Drainage Installation', 'Concreting', 'Kerbing'],
+  'Scaffolder': ['Tube and Fitting Scaffold', 'System Scaffold', 'Edge Protection', 'Hoist Erection'],
+  'Demolition Operative': ['Soft Strip', 'Structural Demolition', 'Site Clearance', 'Asbestos Removal (Supervised)'],
+  'Steel Erector': ['Structural Steel Installation', 'Mezzanine Floor Erection', 'Bolting', 'Welding Connections'],
+  'Floor Layer': ['Screeding', 'Laminate/Wood Flooring', 'Vinyl/Lino Fitting', 'Carpet Tiling'],
+  'Glazier': ['Window Installation', 'Glass Partitioning', 'Double Glazing Repair', 'Curtain Walling'],
+  'Tiler': ['Wall Tiling', 'Floor Tiling', 'Grouting', 'Waterproofing (Tanking)'],
+  'Dryliner / Ceiling Fixer': ['MF Ceilings', 'Suspended Ceilings', 'Partition Walls', 'Taping and Jointing'],
+  'Landscaper': ['Paving/Patios', 'Fencing', 'Turfing', 'Planting/Soft Landscaping'],
+  'HVAC Engineer': ['Air Conditioning Installation', 'Ventilation System Fitting', 'Ductwork', 'System Servicing'],
+  'Cleaner (Post-construction)': ['Sparkle Clean', 'Welfare Cleaning', 'Window Cleaning', 'Dust Removal']
 }
 
 const COMMON_HAZARDS = [
@@ -47,7 +66,6 @@ const COMMON_HAZARDS = [
   "Other / Custom Hazards"
 ]
 
-// Updated list of PPE options
 const PPE_OPTIONS = [
   'Hard Hat',
   'Safety Boots (Steel Toe)',
