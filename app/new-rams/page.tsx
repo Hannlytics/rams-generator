@@ -29,7 +29,6 @@ const TASK_TYPES: { [key: string]: string[] } = {
   'Bricklayer': ['Wall construction', 'Pointing', 'Block work', 'Chimney work']
 }
 
-// Updated list of common hazards
 const COMMON_HAZARDS = [
   "Working at Height",
   "Electrical",
@@ -48,16 +47,22 @@ const COMMON_HAZARDS = [
   "Other / Custom Hazards"
 ]
 
+// Updated list of PPE options
 const PPE_OPTIONS = [
-  'Hard hat',
-  'Safety boots',
-  'High-vis vest',
-  'Safety glasses',
+  'Hard Hat',
+  'Safety Boots (Steel Toe)',
+  'High-Visibility Vest',
+  'Safety Glasses / Goggles',
   'Gloves',
-  'Ear defenders',
-  'Dust mask',
-  'Fall arrest harness',
-  'Face shield'
+  'Ear Defenders / Plugs',
+  'Dust Mask / Respirator',
+  'Fall Arrest Harness',
+  'Face Shield / Visor',
+  'Coveralls / Protective Suit',
+  'Knee Pads',
+  'Welding Shield',
+  'Thermal Gear / Waterproofs',
+  'Life Jacket'
 ]
 
 interface RamsResult {
