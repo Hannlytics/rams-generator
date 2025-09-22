@@ -5,8 +5,6 @@ export async function POST(request: Request) {
     const formData = await request.json();
 
     // This is a simplified placeholder for generating the document content.
-    // In a real application, you would use a library like jsPDF or a templating engine
-    // to create a more richly formatted document.
     const content = `
       RAMS DOCUMENT
       =================================
