@@ -1,9 +1,9 @@
-'use client'
-import { useState } from 'react'
+'use client';
+import { useState } from 'react';
 
 interface AddressLookupProps {
-  value: string
-  onChange: (address: string) => void
+  value: string;
+  onChange: (address: string) => void;
 }
 
 export default function AddressLookup({ value, onChange }: AddressLookupProps) {
@@ -16,34 +16,39 @@ export default function AddressLookup({ value, onChange }: AddressLookupProps) {
     setError(null); // Reset error on new lookup
     try {
       const cleanPostcode = postcode.replace(/\s/g, '');
-      const response = await fetch(`https://api.postcodes.io/postcodes/${cleanPostcode}`);
+      const response = await fetch(
+        `https://api.postcodes.io/postcodes/${cleanPostcode}`
+      );
       const data = await response.json();
-      
+
       if (data.status === 200) {
         const result = data.result;
         // Create a more standard address format
         const fullAddress = [
           result.admin_ward,
-          result.admin_district, 
+          result.admin_district,
           result.postcode,
-          result.country
-        ].filter(Boolean).join(', ');
-        
+          result.country,
+        ]
+          .filter(Boolean)
+          .join(', ');
+
         onChange(fullAddress);
       } else {
         setError('Postcode not found. Please check and try again.');
       }
-    } catch { // FIX: Removed unused variable
-      setError('An error occurred while looking up the postcode.');
+    } catch {
+      // The 'err' variable is not needed and has been removed to fix the build error.
+      setError('Error looking up postcode. Please try again later.');
     } finally {
       setLoading(false);
     }
-  }
-  
+  };
+
   return (
-    <div>
+    <div className="mt-4">
       <div className="flex flex-wrap items-start gap-2 mb-2">
-        <input 
+        <input
           type="text"
           value={postcode}
           onChange={(e) => setPostcode(e.target.value.toUpperCase())}
@@ -63,16 +68,16 @@ export default function AddressLookup({ value, onChange }: AddressLookupProps) {
 
       {/* Display error message if one exists */}
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-      
-      <textarea 
+
+      <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500" 
+        className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
         rows={3}
         placeholder="Full address will appear here..."
         required
       />
     </div>
-  )
+  );
 }
 
