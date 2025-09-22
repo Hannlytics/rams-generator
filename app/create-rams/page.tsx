@@ -213,13 +213,36 @@ export default function NewRams() {
           </div>
         </div>
 
-        {/* --- PHASE 2: REVIEW & VERSION CONTROL SECTION --- */}
+        {/* --- PHASE 2: REVIEW & VERSION CONTROL SECTION (UPDATED) --- */}
         <div className="pb-6">
           <h2 className="text-xl font-semibold mb-4">Review & Version Control</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input value={preparedBy} onChange={(e) => setPreparedBy(e.target.value)} placeholder="Prepared By" className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/>
-            <div><label className="block text-sm font-medium mb-1">Review Date</label><input type="date" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/></div>
-            <div><label className="block text-sm font-medium mb-1">Revision Number</label><input type="number" value={revisionNumber} onChange={(e) => setRevisionNumber(e.target.value)} className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/></div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Prepared By</label>
+              <input 
+                value={preparedBy} 
+                onChange={(e) => setPreparedBy(e.target.value)} 
+                className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Review Date</label>
+              <input 
+                type="date" 
+                value={reviewDate} 
+                onChange={(e) => setReviewDate(e.target.value)} 
+                className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Revision Number</label>
+              <input 
+                type="number" 
+                value={revisionNumber} 
+                onChange={(e) => setRevisionNumber(e.target.value)} 
+                className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
         </div>
         
