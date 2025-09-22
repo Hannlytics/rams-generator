@@ -1,6 +1,6 @@
 'use client';
 import { useState, FormEvent, FC } from 'react';
-import AddressLookup from '../../components/AddressLookup';
+import AddressLookup from '../components/AddressLookup';
 
 // --- TYPE DEFINITIONS ---
 interface Suggestion {
@@ -9,6 +9,38 @@ interface Suggestion {
   message: string;
   suggestion?: string;
 }
+
+// Defines the structure of all the data in our form
+interface RamsFormData {
+  projectName?: string;
+  clientName?: string;
+  startDate?: string;
+  endDate?: string;
+  duration?: string;
+  jobReference?: string;
+  siteAddress?: string;
+  siteContactPerson?: string;
+  trade?: string;
+  taskType?: string;
+  scopeOfWork?: string;
+  methodStatement?: string;
+  sequenceOfOperations?: string;
+  personsAtRisk?: string;
+  selectedHazards?: string[];
+  selectedPPE?: string[];
+  controls?: string;
+  firstAidArrangements?: string;
+  firePrecautions?: string;
+  emergencyContacts?: string;
+  siteManager?: string;
+  contactNumber?: string;
+  preparedBy?: string;
+  reviewedBy?: string;
+  reviewDate?: string;
+  revisionNumber?: string;
+  acknowledgement?: boolean;
+}
+
 
 // --- CONSTANTS (Data for dropdowns, etc.) ---
 const TRADES = [
@@ -70,7 +102,7 @@ const SuggestionBox: FC<{ suggestion: Suggestion }> = ({ suggestion }) => {
 // --- MAIN PAGE COMPONENT ---
 export default function NewRamsPage() {
     const [step, setStep] = useState(1);
-    const [formData, setFormData] = useState<any>({});
+    const [formData, setFormData] = useState<RamsFormData>({});
     const [loading, setLoading] = useState(false);
     const [validating, setValidating] = useState(false);
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -80,7 +112,13 @@ export default function NewRamsPage() {
         
         if (type === 'checkbox') {
             const { checked } = e.target as HTMLInputElement;
-            const currentValues = formData[name] || [];
+
+            if (name === 'acknowledgement') {
+                setFormData({ ...formData, [name]: checked });
+                return;
+            }
+
+            const currentValues = (formData[name as keyof RamsFormData] as string[]) || [];
             if (checked) {
                 setFormData({ ...formData, [name]: [...currentValues, value] });
             } else {
@@ -128,7 +166,6 @@ export default function NewRamsPage() {
                 return (
                     <div>
                         <h2 className="text-xl font-semibold mb-4">Project Information</h2>
-                        {/* Inputs for Project Info with name, value, and onChange */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <input name="projectName" placeholder="Project Name *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
                            <input name="clientName" placeholder="Client Name *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
