@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server';
 
+// --- NEW INTERFACE: Defines the structure of the form data ---
+interface StepData {
+    methodStatement?: string;
+    personsAtRisk?: string;
+    selectedHazards?: string[];
+    controls?: string;
+    [key: string]: any; // Allows for other properties not explicitly defined
+}
+
 // --- Helper Function to format the prompt for the AI ---
-function formatAiPrompt(stepData: any): string {
+function formatAiPrompt(stepData: StepData): string {
     // This function takes all the form data and formats it into a clean,
     // readable string for the AI to analyze.
     let ramsDocument = "RAMS Document:\n";
@@ -49,7 +58,7 @@ function formatAiPrompt(stepData: any): string {
 
 export async function POST(request: Request) {
   try {
-    const stepData = await request.json();
+    const stepData: StepData = await request.json();
     let suggestions = [];
 
     // --- 1. FAST, RULE-BASED VALIDATION (UNCHANGED) ---
@@ -76,7 +85,6 @@ export async function POST(request: Request) {
     }
 
     // --- 2. ADVANCED AI VALIDATION ---
-    // This section calls the Gemini model for deeper analysis.
     const apiKey = ""; // The environment will provide this automatically.
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
     
@@ -99,7 +107,6 @@ export async function POST(request: Request) {
 
     if (!aiResponse.ok) {
         console.error("AI API Error:", await aiResponse.text());
-        // Don't block the user if AI fails, just return the basic suggestions.
         return NextResponse.json({ suggestions });
     }
 
@@ -109,9 +116,8 @@ export async function POST(request: Request) {
     if (aiSuggestionsText) {
         try {
             const parsedAiSuggestions = JSON.parse(aiSuggestionsText);
-            // Combine AI suggestions with rule-based suggestions
             suggestions = [...suggestions, ...parsedAiSuggestions];
-        } catch (e) {
+        } catch (_e) { // FIX: Prefixed 'e' with underscore to mark as unused
             console.error("Failed to parse AI JSON response:", aiSuggestionsText);
         }
     }
