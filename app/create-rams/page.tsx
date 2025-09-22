@@ -69,7 +69,7 @@ export default function NewRams() {
   const [siteManager, setSiteManager] = useState('')
   const [contactNumber, setContactNumber] = useState('')
   
-  // --- PHASE 1: NEW STATE VARIABLES ---
+  // --- PHASE 1 STATE VARIABLES ---
   const [endDate, setEndDate] = useState('')
   const [siteContactPerson, setSiteContactPerson] = useState('')
   const [jobReference, setJobReference] = useState('')
@@ -79,6 +79,15 @@ export default function NewRams() {
   const [specialEquipment, setSpecialEquipment] = useState('')
   const [toolingSafety, setToolingSafety] = useState('')
   const [signageAndBarriers, setSignageAndBarriers] = useState('')
+
+  // --- PHASE 2: NEW STATE VARIABLES ---
+  const [firstAidArrangements, setFirstAidArrangements] = useState('')
+  const [firePrecautions, setFirePrecautions] = useState('')
+  const [emergencyContacts, setEmergencyContacts] = useState('')
+  const [preparedBy, setPreparedBy] = useState('')
+  const [reviewDate, setReviewDate] = useState('')
+  const [revisionNumber, setRevisionNumber] = useState('1')
+
 
   // UI state
   const [loading, setLoading] = useState(false)
@@ -185,12 +194,32 @@ export default function NewRams() {
           <div className="mt-4"><textarea value={signageAndBarriers} onChange={(e) => setSignageAndBarriers(e.target.value)} placeholder="Signage & Barriers (e.g., Chapter 8, pedestrian barriers)" rows={2} className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/></div>
         </div>
 
+        {/* --- PHASE 2: EMERGENCY PLANNING SECTION --- */}
+        <div className="border-b pb-6">
+          <h2 className="text-xl font-semibold mb-4">Emergency Planning</h2>
+          <div className="space-y-4">
+            <textarea value={firstAidArrangements} onChange={(e) => setFirstAidArrangements(e.target.value)} placeholder="First Aid Arrangements (e.g., First aider name, location of kit)" rows={3} className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/>
+            <textarea value={firePrecautions} onChange={(e) => setFirePrecautions(e.target.value)} placeholder="Fire Precautions (e.g., Fire extinguisher locations, assembly point)" rows={3} className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/>
+            <textarea value={emergencyContacts} onChange={(e) => setEmergencyContacts(e.target.value)} placeholder="Emergency Contacts (e.g., Site Manager, Emergency Services: 999)" rows={3} className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/>
+          </div>
+        </div>
+
         {/* --- CONTACT INFORMATION (NO CHANGE) --- */}
-        <div className="pb-6">
+        <div className="border-b pb-6">
           <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input value={siteManager} onChange={(e) => setSiteManager(e.target.value)} placeholder="Site Manager *" required className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/>
             <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} placeholder="Contact Number *" required className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/>
+          </div>
+        </div>
+
+        {/* --- PHASE 2: REVIEW & VERSION CONTROL SECTION --- */}
+        <div className="pb-6">
+          <h2 className="text-xl font-semibold mb-4">Review & Version Control</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input value={preparedBy} onChange={(e) => setPreparedBy(e.target.value)} placeholder="Prepared By" className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/>
+            <div><label className="block text-sm font-medium mb-1">Review Date</label><input type="date" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/></div>
+            <div><label className="block text-sm font-medium mb-1">Revision Number</label><input type="number" value={revisionNumber} onChange={(e) => setRevisionNumber(e.target.value)} className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"/></div>
           </div>
         </div>
         
