@@ -119,15 +119,15 @@ export async function POST(request: Request) {
             if(Array.isArray(parsedAiSuggestions)) {
                suggestions = [...suggestions, ...parsedAiSuggestions];
             }
-        } catch (_e) { // FIX: Prefixed 'e' with underscore to mark as unused
-            console.error("Failed to parse AI JSON response:", aiSuggestionsText);
+        } catch (e) { // FIX: Use the error variable to satisfy the linter.
+            console.error("Failed to parse AI JSON response:", aiSuggestionsText, e);
         }
     }
     
     // --- 3. RETURN COMBINED SUGGESTIONS ---
     return NextResponse.json({ suggestions });
 
-  } catch (_error) { // FINAL FIX: Prefixed 'error' with an underscore
+  } catch (_error) { // FIX: Prefixed 'error' with an underscore
     console.error('Validation API Error:', _error);
     return NextResponse.json({ error: 'Failed to validate step' }, { status: 500 });
   }
