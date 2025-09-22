@@ -9,11 +9,11 @@ interface AddressLookupProps {
 export default function AddressLookup({ value, onChange }: AddressLookupProps) {
   const [postcode, setPostcode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null); // State for error messages
+  const [error, setError] = useState<string | null>(null); // State for handling errors
 
   const lookupPostcode = async () => {
     setLoading(true);
-    setError(null); // Clear previous errors
+    setError(null); // Reset error on new lookup
     try {
       const cleanPostcode = postcode.replace(/\s/g, '');
       const response = await fetch(`https://api.postcodes.io/postcodes/${cleanPostcode}`);
@@ -21,18 +21,19 @@ export default function AddressLookup({ value, onChange }: AddressLookupProps) {
       
       if (data.status === 200) {
         const result = data.result;
+        // Create a more standard address format
         const fullAddress = [
           result.admin_ward,
           result.admin_district, 
           result.postcode,
           result.country
-        ].filter(Boolean).join('\n');
+        ].filter(Boolean).join(', ');
         
         onChange(fullAddress);
       } else {
         setError('Postcode not found. Please check and try again.');
       }
-    } catch (_err) { // FIX: Prefixed 'err' with underscore to mark as unused
+    } catch { // FIX: Removed unused variable
       setError('An error occurred while looking up the postcode.');
     } finally {
       setLoading(false);
@@ -47,20 +48,20 @@ export default function AddressLookup({ value, onChange }: AddressLookupProps) {
           value={postcode}
           onChange={(e) => setPostcode(e.target.value.toUpperCase())}
           placeholder="Enter UK postcode"
-          className="px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 flex-grow"
+          className="flex-grow px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
           maxLength={8}
         />
         <button
           type="button"
           onClick={lookupPostcode}
           disabled={loading || !postcode}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
+          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400"
         >
           {loading ? 'Looking up...' : 'Find Address'}
         </button>
       </div>
-      
-      {/* Display error message if it exists */}
+
+      {/* Display error message if one exists */}
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
       
       <textarea 

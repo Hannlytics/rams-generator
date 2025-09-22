@@ -119,7 +119,7 @@ export async function POST(request: Request) {
             if(Array.isArray(parsedAiSuggestions)) {
                suggestions = [...suggestions, ...parsedAiSuggestions];
             }
-        } catch (e) { // FIX: Use the error variable to satisfy the linter.
+        } catch (e) { 
             console.error("Failed to parse AI JSON response:", aiSuggestionsText, e);
         }
     }
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
     // --- 3. RETURN COMBINED SUGGESTIONS ---
     return NextResponse.json({ suggestions });
 
-  } catch (_error) { // FIX: Prefixed 'error' with an underscore
+  } catch (_error) { 
     console.error('Validation API Error:', _error);
     return NextResponse.json({ error: 'Failed to validate step' }, { status: 500 });
   }
