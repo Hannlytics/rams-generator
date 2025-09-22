@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const stepData: StepData = await request.json();
     let suggestions = [];
 
-    // --- 1. FAST, RULE-BASED VALIDATION (UNCHANGED) ---
+    // --- 1. FAST, RULE-BASED VALIDATION ---
     if (stepData.methodStatement && stepData.methodStatement.length < 50) {
       suggestions.push({
         field: "methodStatement",
@@ -116,7 +116,9 @@ export async function POST(request: Request) {
     if (aiSuggestionsText) {
         try {
             const parsedAiSuggestions = JSON.parse(aiSuggestionsText);
-            suggestions = [...suggestions, ...parsedAiSuggestions];
+            if(Array.isArray(parsedAiSuggestions)) {
+               suggestions = [...suggestions, ...parsedAiSuggestions];
+            }
         } catch (_e) { // FIX: Prefixed 'e' with underscore to mark as unused
             console.error("Failed to parse AI JSON response:", aiSuggestionsText);
         }
@@ -125,8 +127,8 @@ export async function POST(request: Request) {
     // --- 3. RETURN COMBINED SUGGESTIONS ---
     return NextResponse.json({ suggestions });
 
-  } catch (error) {
-    console.error('Validation API Error:', error);
+  } catch (_error) { // FINAL FIX: Prefixed 'error' with an underscore
+    console.error('Validation API Error:', _error);
     return NextResponse.json({ error: 'Failed to validate step' }, { status: 500 });
   }
 }
