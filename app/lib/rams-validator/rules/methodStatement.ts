@@ -1,15 +1,19 @@
-// lib/rams-validator/rules/methodStatement.ts
+// app/lib/rams-validator/rules/coshh.ts
 
-// This rule checks if the method statement is too brief.
-export function validateMethodStatement(stepData: any) {
+// Temporary local interface definition to avoid import issues
+interface RamsFormData {
+  selectedHazards?: string[];
+  controls?: string;
+}
+
+export function validateCoshh(stepData: RamsFormData) {
   const suggestions = [];
-  if (stepData.methodStatement && stepData.methodStatement.length < 50) {
+  if (stepData.selectedHazards?.includes('Hazardous Substances (COSHH)') && !stepData.controls?.toLowerCase().includes('coshh')) {
     suggestions.push({
-      field: "methodStatement",
-      severity: "medium",
-      message: "The method statement is brief. Consider adding more detail about the sequence of operations and specific safety controls.",
+      field: "controls",
+      severity: "high",
+      message: "Hazardous Substances are selected, but no specific COSHH assessment or controls are mentioned in the control measures.",
     });
   }
   return suggestions;
 }
-
