@@ -8,39 +8,15 @@ interface Suggestion {
   severity: 'low' | 'medium' | 'high';
   message: string;
   suggestion?: string;
+  autoFixContent?: string; // Field for the auto-fix text
 }
 
 // Defines the structure of all the data in our form
 interface RamsFormData {
-  projectName?: string;
-  clientName?: string;
-  startDate?: string;
-  endDate?: string;
-  duration?: string;
-  jobReference?: string;
-  siteAddress?: string;
-  siteContactPerson?: string;
-  trade?: string;
-  taskType?: string;
-  scopeOfWork?: string;
-  methodStatement?: string;
-  sequenceOfOperations?: string;
-  personsAtRisk?: string;
+  [key: string]: any; // Allows for flexible properties
   selectedHazards?: string[];
   selectedPPE?: string[];
-  controls?: string;
-  firstAidArrangements?: string;
-  firePrecautions?: string;
-  emergencyContacts?: string;
-  siteManager?: string;
-  contactNumber?: string;
-  preparedBy?: string;
-  reviewedBy?: string;
-  reviewDate?: string;
-  revisionNumber?: string;
-  acknowledgement?: boolean;
 }
-
 
 // --- CONSTANTS (Data for dropdowns, etc.) ---
 const TRADES = [
@@ -55,7 +31,6 @@ const TASK_TYPES: { [key: string]: string[] } = {
     'Electrician': ['EICR', 'PAT Testing', 'New Circuit Installation', 'Fault Finding'],
     'Plumber': ['Leak Repair', 'Central Heating Maintenance', 'Drainage', 'Gas Safety Certificate'],
     'Carpenter / Joiner': ['First Fix (Studwork)', 'Second Fix (Doors, Skirting)', 'Roof Trusses', 'Custom Joinery'],
-    // Add other trades...
 };
 
 const COMMON_HAZARDS = [
@@ -77,15 +52,13 @@ const TOTAL_STEPS = 6;
 
 // --- HELPER COMPONENTS ---
 
-// Component for the progress bar
 const ProgressBar: FC<{ currentStep: number }> = ({ currentStep }) => (
     <div className="w-full bg-gray-200 rounded-full h-2.5 mb-8">
         <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}></div>
     </div>
 );
 
-// Component to display a single suggestion
-const SuggestionBox: FC<{ suggestion: Suggestion }> = ({ suggestion }) => {
+const SuggestionBox: FC<{ suggestion: Suggestion; onApplyFix: (field: string, content: string) => void }> = ({ suggestion, onApplyFix }) => {
     const severityClasses = {
         low: 'bg-yellow-100 border-yellow-400 text-yellow-700',
         medium: 'bg-orange-100 border-orange-400 text-orange-700',
@@ -94,7 +67,15 @@ const SuggestionBox: FC<{ suggestion: Suggestion }> = ({ suggestion }) => {
     return (
         <div className={`p-3 mt-2 border-l-4 rounded-r-lg ${severityClasses[suggestion.severity]}`}>
             <p className="font-bold">{suggestion.message}</p>
-            {suggestion.suggestion && <p>{suggestion.suggestion}</p>}
+            {suggestion.suggestion && <p className="text-sm">{suggestion.suggestion}</p>}
+            {suggestion.autoFixContent && (
+                <button
+                    onClick={() => onApplyFix(suggestion.field, suggestion.autoFixContent || '')}
+                    className="mt-2 px-3 py-1 text-xs font-semibold text-white bg-green-600 rounded-md hover:bg-green-700"
+                >
+                    Apply Fix
+                </button>
+            )}
         </div>
     );
 };
@@ -112,13 +93,11 @@ export default function NewRamsPage() {
         
         if (type === 'checkbox') {
             const { checked } = e.target as HTMLInputElement;
-
             if (name === 'acknowledgement') {
                 setFormData({ ...formData, [name]: checked });
                 return;
             }
-
-            const currentValues = (formData[name as keyof RamsFormData] as string[]) || [];
+            const currentValues = (formData[name] as string[]) || [];
             if (checked) {
                 setFormData({ ...formData, [name]: [...currentValues, value] });
             } else {
@@ -127,6 +106,11 @@ export default function NewRamsPage() {
         } else {
             setFormData({ ...formData, [name]: value });
         }
+    };
+    
+    const handleApplyFix = (field: string, content: string) => {
+        setFormData({ ...formData, [field]: content });
+        setSuggestions(suggestions.filter(s => s.field !== field));
     };
     
     const handleValidation = async () => {
@@ -156,26 +140,25 @@ export default function NewRamsPage() {
         e.preventDefault();
         setLoading(true);
         console.log("Final Form Data:", formData);
-        // Add final submission logic here
         setTimeout(() => setLoading(false), 2000);
     };
 
     const renderStep = () => {
         switch (step) {
-            case 1:
+             case 1:
                 return (
                     <div>
                         <h2 className="text-xl font-semibold mb-4">Project Information</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <input name="projectName" placeholder="Project Name *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="clientName" placeholder="Client Name *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="startDate" type="date" placeholder="Start Date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="endDate" type="date" placeholder="End Date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="duration" placeholder="Duration (e.g., 5 days)" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="jobReference" placeholder="Job Reference / Number" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="projectName" value={formData.projectName || ''} placeholder="Project Name *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="clientName" value={formData.clientName || ''} placeholder="Client Name *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="startDate" value={formData.startDate || ''} type="date" placeholder="Start Date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="endDate" value={formData.endDate || ''} type="date" placeholder="End Date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="duration" value={formData.duration || ''} placeholder="Duration (e.g., 5 days)" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="jobReference" value={formData.jobReference || ''} placeholder="Job Reference / Number" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
                         </div>
                         <AddressLookup value={formData.siteAddress || ''} onChange={(addr) => setFormData({...formData, siteAddress: addr})} />
-                        <input name="siteContactPerson" placeholder="Site Contact Person" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" />
+                        <input name="siteContactPerson" value={formData.siteContactPerson || ''} placeholder="Site Contact Person" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" />
                     </div>
                 );
             case 2:
@@ -183,33 +166,33 @@ export default function NewRamsPage() {
                     <div>
                         <h2 className="text-xl font-semibold mb-4">Work Details</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <select name="trade" onChange={handleInputChange} className="w-full px-4 py-2 border rounded">
+                            <select name="trade" value={formData.trade || ''} onChange={handleInputChange} className="w-full px-4 py-2 border rounded">
                                 <option value="">Select trade...</option>
                                 {TRADES.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
-                            <select name="taskType" onChange={handleInputChange} className="w-full px-4 py-2 border rounded">
+                            <select name="taskType" value={formData.taskType || ''} onChange={handleInputChange} className="w-full px-4 py-2 border rounded">
                                 <option value="">Select task...</option>
                                 {formData.trade && TASK_TYPES[formData.trade]?.map(task => <option key={task} value={task}>{task}</option>)}
                             </select>
                         </div>
-                        <textarea name="scopeOfWork" placeholder="Scope of Work *" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3}></textarea>
-                        {suggestions.filter(s => s.field === 'scopeOfWork').map(s => <SuggestionBox key={s.message} suggestion={s} />)}
-                        <textarea name="methodStatement" placeholder="Method Statement (Step-by-step description)" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={4}></textarea>
-                        {suggestions.filter(s => s.field === 'methodStatement').map(s => <SuggestionBox key={s.message} suggestion={s} />)}
-                         <textarea name="sequenceOfOperations" placeholder="Sequence of Operations" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={4}></textarea>
+                        <textarea name="scopeOfWork" value={formData.scopeOfWork || ''} placeholder="Scope of Work *" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3}></textarea>
+                        {suggestions.filter(s => s.field === 'scopeOfWork').map(s => <SuggestionBox key={s.message} suggestion={s} onApplyFix={handleApplyFix} />)}
+                        <textarea name="methodStatement" value={formData.methodStatement || ''} placeholder="Method Statement (Step-by-step description)" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={4}></textarea>
+                        {suggestions.filter(s => s.field === 'methodStatement').map(s => <SuggestionBox key={s.message} suggestion={s} onApplyFix={handleApplyFix} />)}
+                         <textarea name="sequenceOfOperations" value={formData.sequenceOfOperations || ''} placeholder="Sequence of Operations" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={4}></textarea>
                     </div>
                 );
             case 3:
-                return(
+                 return(
                     <div>
                         <h2 className="text-xl font-semibold mb-4">Risk Assessment</h2>
-                        <input name="personsAtRisk" placeholder="Persons at Risk (e.g., Operatives, public)" onChange={handleInputChange} className="w-full mb-4 px-4 py-2 border rounded" />
-                        {suggestions.filter(s => s.field === 'personsAtRisk').map(s => <SuggestionBox key={s.message} suggestion={s} />)}
+                        <input name="personsAtRisk" value={formData.personsAtRisk || ''} placeholder="Persons at Risk (e.g., Operatives, public)" onChange={handleInputChange} className="w-full mb-4 px-4 py-2 border rounded" />
+                        {suggestions.filter(s => s.field === 'personsAtRisk').map(s => <SuggestionBox key={s.message} suggestion={s} onApplyFix={handleApplyFix} />)}
                         <label className="block text-sm font-medium mb-2">Common Hazards (select all that apply)</label>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
                             {COMMON_HAZARDS.map(hazard => (
                                 <label key={hazard} className="flex items-center">
-                                    <input type="checkbox" name="selectedHazards" value={hazard} onChange={handleInputChange} className="mr-2" />
+                                    <input type="checkbox" name="selectedHazards" value={hazard} checked={formData.selectedHazards?.includes(hazard)} onChange={handleInputChange} className="mr-2" />
                                     <span className="text-sm">{hazard}</span>
                                 </label>
                             ))}
@@ -224,22 +207,22 @@ export default function NewRamsPage() {
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
                             {PPE_OPTIONS.map(ppe => (
                                 <label key={ppe} className="flex items-center">
-                                    <input type="checkbox" name="selectedPPE" value={ppe} onChange={handleInputChange} className="mr-2" />
+                                    <input type="checkbox" name="selectedPPE" value={ppe} checked={formData.selectedPPE?.includes(ppe)} onChange={handleInputChange} className="mr-2" />
                                     <span className="text-sm">{ppe}</span>
                                 </label>
                             ))}
                         </div>
-                        <textarea name="controls" placeholder="Control Measures *" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={4}></textarea>
-                        {suggestions.filter(s => s.field === 'controls').map(s => <SuggestionBox key={s.message} suggestion={s} />)}
+                        <textarea name="controls" value={formData.controls || ''} placeholder="Control Measures *" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={4}></textarea>
+                        {suggestions.filter(s => s.field === 'controls').map(s => <SuggestionBox key={s.message} suggestion={s} onApplyFix={handleApplyFix} />)}
                     </div>
                 );
             case 5:
                  return (
                     <div>
                         <h2 className="text-xl font-semibold mb-4">Emergency Planning</h2>
-                         <textarea name="firstAidArrangements" placeholder="First Aid Arrangements" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3}></textarea>
-                         <textarea name="firePrecautions" placeholder="Fire Precautions" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3}></textarea>
-                         <textarea name="emergencyContacts" placeholder="Emergency Contacts" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3}></textarea>
+                         <textarea name="firstAidArrangements" value={formData.firstAidArrangements || ''} placeholder="First Aid Arrangements" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3}></textarea>
+                         <textarea name="firePrecautions" value={formData.firePrecautions || ''} placeholder="Fire Precautions" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3}></textarea>
+                         <textarea name="emergencyContacts" value={formData.emergencyContacts || ''} placeholder="Emergency Contacts" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3}></textarea>
                     </div>
                 );
             case 6:
@@ -247,16 +230,16 @@ export default function NewRamsPage() {
                      <div>
                         <h2 className="text-xl font-semibold mb-4">Review & Sign-off</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <input name="siteManager" placeholder="Site Manager *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="contactNumber" placeholder="Contact Number *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="preparedBy" placeholder="Prepared By" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           {suggestions.filter(s => s.field === 'preparedBy').map(s => <SuggestionBox key={s.message} suggestion={s} />)}
-                           <input name="reviewedBy" placeholder="Reviewed By (Supervisor)" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="reviewDate" type="date" placeholder="Review Date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="revisionNumber" type="number" placeholder="Revision Number" defaultValue="1" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="siteManager" value={formData.siteManager || ''} placeholder="Site Manager *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="contactNumber" value={formData.contactNumber || ''} placeholder="Contact Number *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="preparedBy" value={formData.preparedBy || ''} placeholder="Prepared By" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           {suggestions.filter(s => s.field === 'preparedBy').map(s => <SuggestionBox key={s.message} suggestion={s} onApplyFix={handleApplyFix} />)}
+                           <input name="reviewedBy" value={formData.reviewedBy || ''} placeholder="Reviewed By (Supervisor)" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="reviewDate" value={formData.reviewDate || ''} type="date" placeholder="Review Date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="revisionNumber" value={formData.revisionNumber || ''} type="number" placeholder="Revision Number" defaultValue="1" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
                         </div>
                          <label className="flex items-center mt-4">
-                           <input type="checkbox" name="acknowledgement" onChange={handleInputChange} className="mr-2" />
+                           <input type="checkbox" name="acknowledgement" checked={formData.acknowledgement || false} onChange={handleInputChange} className="mr-2" />
                            <span className="text-sm">I acknowledge that I have read and understood this Method Statement and Risk Assessment.</span>
                          </label>
                     </div>
