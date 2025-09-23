@@ -8,17 +8,16 @@ interface Suggestion {
   severity: 'low' | 'medium' | 'high';
   message: string;
   suggestion?: string;
-  autoFixContent?: string; // Field for the auto-fix text
+  autoFixContent?: string;
 }
 
-// Defines the structure of all the data in our form
 interface RamsFormData {
-  [key: string]: any; // Allows for flexible properties
+  [key: string]: any;
   selectedHazards?: string[];
   selectedPPE?: string[];
 }
 
-// --- CONSTANTS (Data for dropdowns, etc.) ---
+// --- CONSTANTS ---
 const TRADES = [
     'General Builder', 'Electrician', 'Plumber', 'Bricklayer', 'Carpenter / Joiner', 
     'Painter & Decorator', 'Plasterer', 'Roofing Contractor', 'Groundworker', 'Scaffolder', 
@@ -80,12 +79,52 @@ const SuggestionBox: FC<{ suggestion: Suggestion; onApplyFix: (field: string, co
     );
 };
 
+// --- COPILOT COMPONENT ---
+const CopilotBar: FC<{ onGenerate: (prompt: string) => void, loading: boolean }> = ({ onGenerate, loading }) => {
+    const [prompt, setPrompt] = useState('');
+
+    const handleGenerateClick = () => {
+        if (prompt.trim()) {
+            onGenerate(prompt);
+        }
+    };
+
+    return (
+        <div className="bg-white p-4 rounded-lg shadow-lg mb-8 border border-blue-200">
+            <label htmlFor="copilot-prompt" className="block text-sm font-bold text-gray-800 mb-2">
+                ✨ RAMS AI Copilot
+            </label>
+            <div className="flex gap-2">
+                <input
+                    id="copilot-prompt"
+                    type="text"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="e.g., Create a RAMS for bricklaying on scaffolding..."
+                    className="flex-grow px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    disabled={loading}
+                />
+                <button
+                    onClick={handleGenerateClick}
+                    disabled={loading || !prompt.trim()}
+                    className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                >
+                    {loading ? 'Generating...' : 'Generate'}
+                </button>
+            </div>
+             <p className="text-xs text-gray-500 mt-2">Describe the job, and the AI will pre-fill the form for you to review.</p>
+        </div>
+    );
+};
+
+
 // --- MAIN PAGE COMPONENT ---
 export default function NewRamsPage() {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<RamsFormData>({});
     const [loading, setLoading] = useState(false);
     const [validating, setValidating] = useState(false);
+    const [copilotLoading, setCopilotLoading] = useState(false);
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -130,6 +169,26 @@ export default function NewRamsPage() {
             console.error("Validation failed:", error);
         } finally {
             setValidating(false);
+        }
+    };
+
+    const handleCopilotGenerate = async (prompt: string) => {
+        setCopilotLoading(true);
+        try {
+            const response = await fetch('/api/copilot-generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt }),
+            });
+            const result = await response.json();
+            if (result.formData) {
+                setFormData(result.formData);
+                setStep(2);
+            }
+        } catch (error) {
+            console.error("Copilot generation failed:", error);
+        } finally {
+            setCopilotLoading(false);
         }
     };
 
@@ -252,6 +311,9 @@ export default function NewRamsPage() {
     return (
         <main className="p-8 max-w-4xl mx-auto bg-gray-50 min-h-screen">
             <h1 className="text-3xl font-bold mb-2">Create New RAMS Document</h1>
+            
+            <CopilotBar onGenerate={handleCopilotGenerate} loading={copilotLoading} />
+
             <p className="text-gray-600 mb-6">Step {step} of {TOTAL_STEPS}</p>
             <ProgressBar currentStep={step} />
 
