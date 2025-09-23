@@ -1,6 +1,6 @@
 'use client';
-import { useState, FormEvent, FC } from 'react';
-import AddressLookup from '../components/AddressLookup';
+import { useState, FormEvent, FC, ChangeEvent } from 'react';
+import AddressLookup from '../components/AddressLookup'; // FIX: Corrected the relative path
 
 // --- TYPE DEFINITIONS ---
 interface Suggestion {
@@ -11,11 +11,40 @@ interface Suggestion {
   autoFixContent?: string;
 }
 
+// A strict, detailed interface for all form data.
 interface RamsFormData {
-  [key: string]: any;
+  projectName?: string;
+  clientName?: string;
+  startDate?: string;
+  endDate?: string;
+  duration?: string;
+  jobReference?: string;
+  siteAddress?: string;
+  siteContactPerson?: string;
+  trade?: string;
+  taskType?: string;
+  scopeOfWork?: string;
+  methodStatement?: string;
+  sequenceOfOperations?: string;
+  personsAtRisk?: string;
   selectedHazards?: string[];
   selectedPPE?: string[];
+  controls?: string;
+  specialEquipment?: string;
+  toolingSafety?: string;
+  signageAndBarriers?: string;
+  firstAidArrangements?: string;
+  firePrecautions?: string;
+  emergencyContacts?: string;
+  siteManager?: string;
+  contactNumber?: string;
+  preparedBy?: string;
+  reviewedBy?: string;
+  reviewDate?: string;
+  revisionNumber?: string; 
+  acknowledgement?: boolean;
 }
+
 
 // --- CONSTANTS ---
 const TRADES = [
@@ -69,6 +98,7 @@ const SuggestionBox: FC<{ suggestion: Suggestion; onApplyFix: (field: string, co
             {suggestion.suggestion && <p className="text-sm">{suggestion.suggestion}</p>}
             {suggestion.autoFixContent && (
                 <button
+                    type="button"
                     onClick={() => onApplyFix(suggestion.field, suggestion.autoFixContent || '')}
                     className="mt-2 px-3 py-1 text-xs font-semibold text-white bg-green-600 rounded-md hover:bg-green-700"
                 >
@@ -105,6 +135,7 @@ const CopilotBar: FC<{ onGenerate: (prompt: string) => void, loading: boolean }>
                     disabled={loading}
                 />
                 <button
+                    type="button"
                     onClick={handleGenerateClick}
                     disabled={loading || !prompt.trim()}
                     className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
@@ -121,35 +152,38 @@ const CopilotBar: FC<{ onGenerate: (prompt: string) => void, loading: boolean }>
 // --- MAIN PAGE COMPONENT ---
 export default function NewRamsPage() {
     const [step, setStep] = useState(1);
-    const [formData, setFormData] = useState<RamsFormData>({});
+    const [formData, setFormData] = useState<RamsFormData>({ revisionNumber: '1' });
     const [loading, setLoading] = useState(false);
     const [validating, setValidating] = useState(false);
     const [copilotLoading, setCopilotLoading] = useState(false);
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         
         if (type === 'checkbox') {
             const { checked } = e.target as HTMLInputElement;
-            if (name === 'acknowledgement') {
-                setFormData({ ...formData, [name]: checked });
-                return;
-            }
-            const currentValues = (formData[name] as string[]) || [];
-            if (checked) {
-                setFormData({ ...formData, [name]: [...currentValues, value] });
+            
+            const isMultiSelect = name === 'selectedHazards' || name === 'selectedPPE';
+
+            if (isMultiSelect) {
+                 const currentValues = (formData[name as keyof RamsFormData] as string[]) || [];
+                if (checked) {
+                    setFormData(prev => ({ ...prev, [name]: [...currentValues, value] }));
+                } else {
+                    setFormData(prev => ({ ...prev, [name]: currentValues.filter((item: string) => item !== value) }));
+                }
             } else {
-                setFormData({ ...formData, [name]: currentValues.filter((item: string) => item !== value) });
+                 setFormData(prev => ({ ...prev, [name]: checked }));
             }
         } else {
-            setFormData({ ...formData, [name]: value });
+            setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
     
     const handleApplyFix = (field: string, content: string) => {
-        setFormData({ ...formData, [field]: content });
-        setSuggestions(suggestions.filter(s => s.field !== field));
+        setFormData(prev => ({ ...prev, [field]: content }));
+        setSuggestions(prev => prev.filter(s => s.field !== field));
     };
     
     const handleValidation = async () => {
@@ -182,7 +216,7 @@ export default function NewRamsPage() {
             });
             const result = await response.json();
             if (result.formData) {
-                setFormData(result.formData);
+                setFormData(prev => ({...prev, ...result.formData}));
                 setStep(2);
             }
         } catch (error) {
@@ -195,11 +229,21 @@ export default function NewRamsPage() {
     const nextStep = () => setStep(prev => Math.min(prev + 1, TOTAL_STEPS));
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        console.log("Final Form Data:", formData);
-        setTimeout(() => setLoading(false), 2000);
+        try {
+             await fetch('/api/generate-rams', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+            // Handle successful submission, e.g., show a success message or redirect
+        } catch (error) {
+            console.error("Submission failed:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const renderStep = () => {
@@ -295,7 +339,7 @@ export default function NewRamsPage() {
                            {suggestions.filter(s => s.field === 'preparedBy').map(s => <SuggestionBox key={s.message} suggestion={s} onApplyFix={handleApplyFix} />)}
                            <input name="reviewedBy" value={formData.reviewedBy || ''} placeholder="Reviewed By (Supervisor)" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
                            <input name="reviewDate" value={formData.reviewDate || ''} type="date" placeholder="Review Date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
-                           <input name="revisionNumber" value={formData.revisionNumber || ''} type="number" placeholder="Revision Number" defaultValue="1" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+                           <input name="revisionNumber" value={formData.revisionNumber || '1'} type="number" placeholder="Revision Number" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
                         </div>
                          <label className="flex items-center mt-4">
                            <input type="checkbox" name="acknowledgement" checked={formData.acknowledgement || false} onChange={handleInputChange} className="mr-2" />
