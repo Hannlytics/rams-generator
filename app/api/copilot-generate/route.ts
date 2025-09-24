@@ -1,86 +1,121 @@
-import { NextResponse } from 'next/server';
+// app/api/copilot-generate/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 
-// This is the core instruction for the Copilot AI.
-// It tells the AI to act as an assistant that deconstructs a user's request
-// into the structured data our form needs.
-const systemPrompt = `
-You are an AI assistant for a UK Health & Safety RAMS (Risk Assessment and Method Statement) generator. 
-Your task is to take a user's natural language request and deconstruct it into a structured JSON object that can pre-fill a form.
-
-Analyze the user's prompt to identify the following key entities:
-- trade: The primary construction trade involved.
-- taskType: The specific task being performed.
-- scopeOfWork: A brief description of the job.
-- methodStatement: A simple, step-by-step method statement based on the task.
-- sequenceOfOperations: A numbered list of the operational sequence.
-- selectedHazards: A list of likely hazards based on the task (e.g., scaffolding implies "Working at Height").
-- selectedPPE: A list of essential PPE for the task.
-- controls: Suggested control measures for the identified hazards.
-
-Return ONLY the structured JSON object.
-
-Example Request: "a RAMS for bricklaying on scaffolding with hazardous adhesives"
-Example JSON Output:
-{
-  "trade": "Bricklayer",
-  "taskType": "Feature Brickwork",
-  "scopeOfWork": "Construction of a brick wall on an external scaffold, using specialized chemical adhesives.",
-  "methodStatement": "1. Erect scaffold as per design. 2. Mix adhesive in a ventilated area. 3. Lay bricks course by course. 4. Clean up area and remove waste.",
-  "sequenceOfOperations": "1. Scaffold Erection\n2. Material Preparation\n3. Bricklaying\n4. Site Cleanup",
-  "selectedHazards": ["Working at Height", "Manual Handling", "Hazardous Substances (COSHH)", "Slips, Trips and Falls"],
-  "selectedPPE": ["Hard Hat", "Safety Boots (Steel Toe)", "High-Visibility Vest", "Gloves", "Safety Glasses / Goggles"],
-  "controls": "Scaffold to be inspected before use. Manual handling techniques to be used. COSHH data sheet for adhesive to be available on site. Area to be kept tidy."
+interface OpenAIMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
 }
-`;
 
-export async function POST(request: Request) {
+interface OpenAIResponse {
+  choices: {
+    message: {
+      content: string;
+    };
+  }[];
+  usage?: {
+    total_tokens: number;
+  };
+}
+
+export async function POST(request: NextRequest) {
   try {
     const { prompt } = await request.json();
-
-    if (!prompt) {
-      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
+    
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json({
+        success: false,
+        error: 'OpenAI API key not configured'
+      }, { status: 500 });
     }
 
-    const apiKey = ""; // The environment will provide this automatically.
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+    const systemPrompt = `You are a UK construction safety expert specializing in RAMS (Risk Assessment Method Statements). 
 
-    const payload = {
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
-    };
+IMPORTANT: You must respond with ONLY valid JSON in this exact format:
+{
+  "projectName": "string",
+  "trade": "string", 
+  "taskType": "string",
+  "scopeOfWork": "string",
+  "methodStatement": "string",
+  "personsAtRisk": "string",
+  "selectedHazards": ["string1", "string2"],
+  "controls": "string",
+  "specialConsiderations": "string"
+}
 
-    const aiResponse = await fetch(apiUrl, {
+Guidelines:
+- Use UK construction terminology and regulations
+- Reference CDM 2015, COSHH, and relevant standards
+- Include specific control measures, not generic advice  
+- Hazards must be from: "Working at Height", "Electrical", "Manual Handling", "Power Tools / Equipment", "Hazardous Substances (COSHH)", "Slips, Trips and Falls", "Noise & Vibration", "Dust / Airborne Particles", "Hot Works", "Confined Spaces", "Lone Working", "Vehicular Movement", "Fire / Emergency Risks"
+- Method statements should be step-by-step and detailed
+- Always include disclaimer that this requires professional review
+- Be specific to UK construction practices and regulations`;
+
+    const messages: OpenAIMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt }
+    ];
+
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: messages,
+        max_tokens: 2000,
+        temperature: 0.3,
+        response_format: { type: "json_object" }
+      }),
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API Error:", errorText);
-      return NextResponse.json({ error: 'Failed to get AI response' }, { status: 500 });
+    if (!openAIResponse.ok) {
+      const errorData = await openAIResponse.text();
+      console.error('OpenAI API error:', errorData);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to generate RAMS content'
+      }, { status: 500 });
     }
 
-    const aiResult = await aiResponse.json();
-    const aiResponseText = aiResult.candidates?.[0]?.content?.parts?.[0]?.text;
+    const data: OpenAIResponse = await openAIResponse.json();
+    const generatedContent = data.choices[0]?.message?.content;
 
-    if (aiResponseText) {
-      try {
-        const parsedData = JSON.parse(aiResponseText);
-        return NextResponse.json({ formData: parsedData });
-      } catch (e) {
-        console.error("Failed to parse AI JSON response:", aiResponseText, e);
-        return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 500 });
-      }
+    if (!generatedContent) {
+      return NextResponse.json({
+        success: false,
+        error: 'No content generated'
+      }, { status: 500 });
     }
-    
-    return NextResponse.json({ error: 'No content from AI' }, { status: 500 });
+
+    try {
+      const parsedContent = JSON.parse(generatedContent);
+      
+      // Add safety disclaimer
+      parsedContent.aiGenerated = true;
+      parsedContent.disclaimer = "This RAMS was AI-generated and must be reviewed by a competent person before use";
+      
+      return NextResponse.json({
+        success: true,
+        formData: parsedContent
+      });
+
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to parse generated content'
+      }, { status: 500 });
+    }
 
   } catch (error) {
-    console.error('Copilot API Error:', error);
-    return NextResponse.json({ error: 'Failed to process copilot request' }, { status: 500 });
+    console.error('Copilot generation error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Internal server error'
+    }, { status: 500 });
   }
 }

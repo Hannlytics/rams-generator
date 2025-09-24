@@ -1,6 +1,6 @@
 'use client';
 import { useState, FormEvent, FC, ChangeEvent } from 'react';
-import AddressLookup from '../components/AddressLookup'; // FIX: Corrected the relative path
+import AddressLookup from '../components/AddressLookup';
 
 // --- TYPE DEFINITIONS ---
 interface Suggestion {
@@ -12,7 +12,7 @@ interface Suggestion {
 }
 
 // A strict, detailed interface for all form data.
-interface RamsFormData {
+export interface RamsFormData {
   projectName?: string;
   clientName?: string;
   startDate?: string;
@@ -45,23 +45,29 @@ interface RamsFormData {
   acknowledgement?: boolean;
 }
 
+interface APIResponse {
+  success?: boolean;
+  suggestions?: Suggestion[];
+  formData?: Partial<RamsFormData>;
+  error?: string;
+}
 
 // --- CONSTANTS ---
-const TRADES = [
+const TRADES: string[] = [
     'General Builder', 'Electrician', 'Plumber', 'Bricklayer', 'Carpenter / Joiner', 
     'Painter & Decorator', 'Plasterer', 'Roofing Contractor', 'Groundworker', 'Scaffolder', 
     'Demolition Operative', 'Steel Erector', 'Floor Layer', 'Glazier', 'Tiler', 
     'Dryliner / Ceiling Fixer', 'Landscaper', 'HVAC Engineer', 'Cleaner (Post-construction)'
 ];
 
-const TASK_TYPES: { [key: string]: string[] } = {
+const TASK_TYPES: Record<string, string[]> = {
     'General Builder': ['Small Extension', 'Refurbishment', 'Structural Repairs', 'General Maintenance'],
     'Electrician': ['EICR', 'PAT Testing', 'New Circuit Installation', 'Fault Finding'],
     'Plumber': ['Leak Repair', 'Central Heating Maintenance', 'Drainage', 'Gas Safety Certificate'],
     'Carpenter / Joiner': ['First Fix (Studwork)', 'Second Fix (Doors, Skirting)', 'Roof Trusses', 'Custom Joinery'],
 };
 
-const COMMON_HAZARDS = [
+const COMMON_HAZARDS: string[] = [
     "Working at Height", "Electrical", "Manual Handling", "Power Tools / Equipment", 
     "Hazardous Substances (COSHH)", "Slips, Trips and Falls", "Noise & Vibration", 
     "Dust / Airborne Particles", "Hot Works", "Confined Spaces", "Lone Working", 
@@ -69,29 +75,38 @@ const COMMON_HAZARDS = [
     "Other / Custom Hazards"
 ];
 
-const PPE_OPTIONS = [
+const PPE_OPTIONS: string[] = [
     'Hard Hat', 'Safety Boots (Steel Toe)', 'High-Visibility Vest', 'Safety Glasses / Goggles', 
     'Gloves', 'Ear Defenders / Plugs', 'Dust Mask / Respirator', 'Fall Arrest Harness', 
     'Face Shield / Visor', 'Coveralls / Protective Suit', 'Knee Pads', 'Welding Shield', 
     'Thermal Gear / Waterproofs', 'Life Jacket'
 ];
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS: number = 6;
 
 // --- HELPER COMPONENTS ---
+interface ProgressBarProps {
+  currentStep: number;
+}
 
-const ProgressBar: FC<{ currentStep: number }> = ({ currentStep }) => (
+const ProgressBar: FC<ProgressBarProps> = ({ currentStep }) => (
     <div className="w-full bg-gray-200 rounded-full h-2.5 mb-8">
         <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}></div>
     </div>
 );
 
-const SuggestionBox: FC<{ suggestion: Suggestion; onApplyFix: (field: string, content: string) => void }> = ({ suggestion, onApplyFix }) => {
-    const severityClasses = {
+interface SuggestionBoxProps {
+  suggestion: Suggestion;
+  onApplyFix: (field: string, content: string) => void;
+}
+
+const SuggestionBox: FC<SuggestionBoxProps> = ({ suggestion, onApplyFix }) => {
+    const severityClasses: Record<string, string> = {
         low: 'bg-yellow-100 border-yellow-400 text-yellow-700',
         medium: 'bg-orange-100 border-orange-400 text-orange-700',
         high: 'bg-red-100 border-red-400 text-red-700',
     };
+    
     return (
         <div className={`p-3 mt-2 border-l-4 rounded-r-lg ${severityClasses[suggestion.severity]}`}>
             <p className="font-bold">{suggestion.message}</p>
@@ -110,13 +125,22 @@ const SuggestionBox: FC<{ suggestion: Suggestion; onApplyFix: (field: string, co
 };
 
 // --- COPILOT COMPONENT ---
-const CopilotBar: FC<{ onGenerate: (prompt: string) => void, loading: boolean }> = ({ onGenerate, loading }) => {
-    const [prompt, setPrompt] = useState('');
+interface CopilotBarProps {
+  onGenerate: (prompt: string) => void;
+  loading: boolean;
+}
 
-    const handleGenerateClick = () => {
+const CopilotBar: FC<CopilotBarProps> = ({ onGenerate, loading }) => {
+    const [prompt, setPrompt] = useState<string>('');
+
+    const handleGenerateClick = (): void => {
         if (prompt.trim()) {
             onGenerate(prompt);
         }
+    };
+
+    const handlePromptChange = (e: ChangeEvent<HTMLInputElement>): void => {
+        setPrompt(e.target.value);
     };
 
     return (
@@ -129,7 +153,7 @@ const CopilotBar: FC<{ onGenerate: (prompt: string) => void, loading: boolean }>
                     id="copilot-prompt"
                     type="text"
                     value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
+                    onChange={handlePromptChange}
                     placeholder="e.g., Create a RAMS for bricklaying on scaffolding..."
                     className="flex-grow px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     disabled={loading}
@@ -148,17 +172,16 @@ const CopilotBar: FC<{ onGenerate: (prompt: string) => void, loading: boolean }>
     );
 };
 
-
 // --- MAIN PAGE COMPONENT ---
 export default function NewRamsPage() {
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState<number>(1);
     const [formData, setFormData] = useState<RamsFormData>({ revisionNumber: '1' });
-    const [loading, setLoading] = useState(false);
-    const [validating, setValidating] = useState(false);
-    const [copilotLoading, setCopilotLoading] = useState(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [validating, setValidating] = useState<boolean>(false);
+    const [copilotLoading, setCopilotLoading] = useState<boolean>(false);
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
         const { name, value, type } = e.target;
         
         if (type === 'checkbox') {
@@ -167,26 +190,26 @@ export default function NewRamsPage() {
             const isMultiSelect = name === 'selectedHazards' || name === 'selectedPPE';
 
             if (isMultiSelect) {
-                 const currentValues = (formData[name as keyof RamsFormData] as string[]) || [];
+                const currentValues = (formData[name as keyof RamsFormData] as string[]) || [];
                 if (checked) {
                     setFormData(prev => ({ ...prev, [name]: [...currentValues, value] }));
                 } else {
                     setFormData(prev => ({ ...prev, [name]: currentValues.filter((item: string) => item !== value) }));
                 }
             } else {
-                 setFormData(prev => ({ ...prev, [name]: checked }));
+                setFormData(prev => ({ ...prev, [name]: checked }));
             }
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
     
-    const handleApplyFix = (field: string, content: string) => {
+    const handleApplyFix = (field: string, content: string): void => {
         setFormData(prev => ({ ...prev, [field]: content }));
         setSuggestions(prev => prev.filter(s => s.field !== field));
     };
     
-    const handleValidation = async () => {
+    const handleValidation = async (): Promise<void> => {
         setValidating(true);
         setSuggestions([]);
         try {
@@ -195,7 +218,7 @@ export default function NewRamsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
-            const result = await response.json();
+            const result: APIResponse = await response.json();
             if (result.suggestions) {
                 setSuggestions(result.suggestions);
             }
@@ -206,7 +229,7 @@ export default function NewRamsPage() {
         }
     };
 
-    const handleCopilotGenerate = async (prompt: string) => {
+    const handleCopilotGenerate = async (prompt: string): Promise<void> => {
         setCopilotLoading(true);
         try {
             const response = await fetch('/api/copilot-generate', {
@@ -214,7 +237,7 @@ export default function NewRamsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt }),
             });
-            const result = await response.json();
+            const result: APIResponse = await response.json();
             if (result.formData) {
                 setFormData(prev => ({...prev, ...result.formData}));
                 setStep(2);
@@ -226,14 +249,14 @@ export default function NewRamsPage() {
         }
     };
 
-    const nextStep = () => setStep(prev => Math.min(prev + 1, TOTAL_STEPS));
-    const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+    const nextStep = (): void => setStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+    const prevStep = (): void => setStep(prev => Math.max(prev - 1, 1));
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
         setLoading(true);
         try {
-             await fetch('/api/generate-rams', {
+            await fetch('/api/generate-rams', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -244,6 +267,10 @@ export default function NewRamsPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleAddressChange = (address: string): void => {
+        setFormData({ ...formData, siteAddress: address });
     };
 
     const renderStep = () => {
@@ -260,7 +287,7 @@ export default function NewRamsPage() {
                            <input name="duration" value={formData.duration || ''} placeholder="Duration (e.g., 5 days)" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
                            <input name="jobReference" value={formData.jobReference || ''} placeholder="Job Reference / Number" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
                         </div>
-                        <AddressLookup value={formData.siteAddress || ''} onChange={(addr) => setFormData({...formData, siteAddress: addr})} />
+                        <AddressLookup value={formData.siteAddress || ''} onChange={handleAddressChange} />
                         <input name="siteContactPerson" value={formData.siteContactPerson || ''} placeholder="Site Contact Person" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" />
                     </div>
                 );
@@ -399,4 +426,3 @@ export default function NewRamsPage() {
         </main>
     );
 }
-
