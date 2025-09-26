@@ -62,7 +62,8 @@ export interface RamsFormData {
   acknowledgement?: boolean;
   aiGenerated?: boolean;
   competentPersonVerified?: boolean;
-  [key: string]: any;  // Add this index signature
+  // More specific type instead of any:
+  [key: string]: string | string[] | boolean | number | undefined;
 }
 
 interface APIResponse {

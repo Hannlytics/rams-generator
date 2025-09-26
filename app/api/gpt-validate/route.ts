@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
   try {
+    // Check for API key first
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json({
+        languageScore: 75,
+        toneScore: 75,
+        completenessScore: 65,
+        suggestions: [
+          "AI validation unavailable - API key not configured.",
+          "Please ensure all safety procedures follow current UK regulations."
+        ]
+      }, { status: 200 });
+    }
+
+    // Initialize OpenAI INSIDE the function
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const formData = await request.json();
 
     // Construct the validation prompt
@@ -45,7 +58,7 @@ export async function POST(request: NextRequest) {
           content: prompt
         }
       ],
-      temperature: 0.3, // Lower temperature for more consistent responses
+      temperature: 0.3,
       max_tokens: 500,
     });
 
@@ -56,7 +69,6 @@ export async function POST(request: NextRequest) {
     try {
       gptReview = JSON.parse(responseContent || '{}');
     } catch (error) {
-      // Fixed: Using the error variable properly
       console.error('Failed to parse GPT response:', responseContent);
       console.error('Parse error details:', error);
       
@@ -75,7 +87,7 @@ export async function POST(request: NextRequest) {
       toneScore: typeof gptReview.toneScore === 'number' ? gptReview.toneScore : 70,
       completenessScore: typeof gptReview.completenessScore === 'number' ? gptReview.completenessScore : 60,
       suggestions: Array.isArray(gptReview.suggestions) 
-        ? gptReview.suggestions.slice(0, 5) // Max 5 suggestions
+        ? gptReview.suggestions.slice(0, 5)
         : ["Please review all sections for completeness"]
     };
 
@@ -93,6 +105,6 @@ export async function POST(request: NextRequest) {
         "GPT validation temporarily unavailable. Manual review recommended.",
         "Ensure all safety procedures follow current UK regulations."
       ]
-    }, { status: 200 }); // Return 200 even on error to avoid breaking the frontend
+    }, { status: 200 });
   }
 }
