@@ -189,19 +189,19 @@ const EnhancedAICopilot = ({ onGenerate, loading }: { onGenerate: (prompt: strin
     }
   };
 
-  const quickPrompts = [
-    "Create RAMS for bricklaying on scaffolding",
-    "Generate electrical work safety procedures",
-    "What PPE needed for demolition work?",
-    "RIDDOR requirements for injury reporting",
-    "COSHH assessment for adhesives",
-    "Working at height risk assessment",
+ const quickPrompts = [
     "Asbestos removal procedures",
-    "Manual handling assessment",
     "Confined space entry protocols",
-    "Hot works permit requirements",
+    "COSHH assessment for adhesives",
+    "Create RAMS for bricklaying on scaffolding",
     "Excavation and trenching safety",
-    "Temporary works coordination"
+    "Generate electrical work safety procedures",
+    "Hot works permit requirements",
+    "Manual handling assessment",
+    "RIDDOR requirements for injury reporting",
+    "Temporary works coordination",
+    "What PPE needed for demolition work?",
+    "Working at height risk assessment"
   ];
 
   return (
