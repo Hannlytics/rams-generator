@@ -3,7 +3,7 @@ import { useState, ChangeEvent, useRef, useEffect } from 'react';
 import AddressLookup from '../components/AddressLookup';
 import LegalDisclaimer from '../components/LegalDisclaimer';
 import { EducationalTooltip } from '../components/EducationalTooltips';
-import { CompetencyChecker } from '../components/CompetencyChecker';
+import CompetencyChecker from '../components/CompetencyChecker';
 import { ResponsibleAIBanner } from '../components/ResponsibleAIBanner';
 
 // --- TYPE DEFINITIONS ---
