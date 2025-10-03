@@ -1,261 +1,280 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
 
-// --- Type Definitions ---
-interface IconProps {
-  className?: string;
-}
+import React, { useState } from 'react';
 
-interface UrlFormProps {
-  onSubmit: (url: string) => void;
-  loading: boolean;
-}
-
-interface ErrorDisplayProps {
-  message: string;
-}
-
-interface SummaryDisplayProps {
-  summary: string;
-  originalUrl: string;
-}
-
-// --- SVG Icons ---
-const LinkIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400">
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path>
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path>
+// --- Helper Components for Icons ---
+const ClockIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 
-const SparklesIcon: React.FC<IconProps> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M12 3L9.5 8.5L4 11L9.5 13.5L12 19L14.5 13.5L20 11L14.5 8.5L12 3Z"></path>
-    <path d="M5 3L6 5"></path><path d="M18 19L19 21"></path>
-    <path d="M3 18L5 19"></path><path d="M19 5L21 6"></path>
+const ShieldCheckIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.917V21h18v-.083A12.02 12.02 0 0018.382 5.984z" />
   </svg>
 );
 
-// --- UI Components ---
-
-const Header: React.FC = () => (
-  <header className="bg-white shadow-sm">
-    <div className="container mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-center">
-      <SparklesIcon className="h-8 w-8 text-blue-600 mr-3" />
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">
-        AI Article Summarizer
-      </h1>
-    </div>
-  </header>
+const DocumentTextIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
 );
 
-const UrlForm: React.FC<UrlFormProps> = ({ onSubmit, loading }) => {
-  const [url, setUrl] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (url.trim()) {
-      onSubmit(url);
-    }
+// --- CompetencyChecker Component (Integrated) ---
+type CompetencyLevel = {
+  level: string;
+  description: string;
+  permissions: {
+    draft: string;
+    review: string;
+    approve: string;
+    audit: string;
   };
-
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="url-input" className="block text-sm font-medium text-gray-700 mb-2">
-          Enter article URL to summarize
-        </label>
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <LinkIcon />
-          </div>
-          <input
-            type="url"
-            id="url-input"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
-            placeholder="https://example.com/article"
-            required
-            disabled={loading}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-4 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center"
-        >
-          {loading ? 'Summarizing...' : 'Generate Summary'}
-          {!loading && <SparklesIcon className="h-5 w-5 ml-2" />}
-        </button>
-      </form>
-    </div>
-  );
 };
 
-const LoadingSpinner: React.FC = () => (
-  <div className="flex flex-col items-center justify-center p-8 text-center">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-    <p className="text-gray-600 font-medium">Analyzing article...</p>
-  </div>
-);
-
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ message }) => (
-  <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md" role="alert">
-    <p className="font-bold">An error occurred</p>
-    <p>{message}</p>
-  </div>
-);
-
-const SummaryDisplay: React.FC<SummaryDisplayProps> = ({ summary, originalUrl }) => {
-    const summaryRef = useRef<HTMLDivElement>(null);
-    const [copied, setCopied] = useState<boolean>(false);
-
-    const handleCopy = () => {
-        if (summaryRef.current) {
-            const range = document.createRange();
-            range.selectNode(summaryRef.current);
-            window.getSelection()?.removeAllRanges();
-            window.getSelection()?.addRange(range);
-            try {
-                // Using document.execCommand for broader iframe compatibility
-                document.execCommand('copy');
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-            }
-            window.getSelection()?.removeAllRanges();
-        }
-    };
-    
-  return (
-    <div className="mt-8 p-6 bg-white rounded-xl shadow-lg animate-fade-in">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Summary</h2>
-        <button
-            onClick={handleCopy}
-            className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-        >
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
-      </div>
-      <div ref={summaryRef} className="text-gray-700 leading-relaxed space-y-4">
-        {summary.split('\n').map((paragraph, index) => (
-          <p key={index}>{paragraph}</p>
-        ))}
-      </div>
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <a href={originalUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
-          Read original article
-        </a>
-      </div>
-    </div>
-  );
+const competencyLevels: { [key: string]: CompetencyLevel } = {
+    'Trainee': {
+        level: 'Trainee',
+        description: 'You must work under supervision. Any RAMS you create require full review and approval by a qualified professional.',
+        permissions: { draft: 'assist', review: 'no', approve: 'no', audit: 'no' }
+    },
+    'Junior Practitioner': {
+        level: 'Junior Practitioner',
+        description: 'You may draft RAMS for low-risk tasks but must obtain review/approval from a competent HSE professional.',
+        permissions: { draft: 'low-risk', review: 'no', approve: 'no', audit: 'no' }
+    },
+    'Practitioner': {
+        level: 'Practitioner / Supervisor',
+        description: 'You are competent to draft and review RAMS for routine tasks. High-risk RAMS require senior approval.',
+        permissions: { draft: 'yes', review: 'yes', approve: 'low-medium', audit: 'no' }
+    },
+    'Senior Manager': {
+        level: 'Senior HSE Manager',
+        description: 'You are competent to approve RAMS at all risk levels and provide oversight.',
+        permissions: { draft: 'yes', review: 'yes', approve: 'yes', audit: 'yes' }
+    },
+    'Specialist': {
+        level: 'Specialist / Consultant',
+        description: 'You are recognised as a subject-matter expert. You may audit RAMS and provide external sign-off.',
+        permissions: { draft: 'yes', review: 'yes', approve: 'yes', audit: 'expert' }
+    }
 };
 
+const RadioOption = ({ id, name, value, label, checked, onChange }: { id: string, name: string, value: string, label: string, checked: string, onChange: (value: string) => void }) => (
+    <label 
+        htmlFor={id} 
+        className={`flex items-center p-4 w-full bg-white border rounded-lg cursor-pointer transition-all duration-200 ${
+            checked === value 
+            ? 'border-blue-500 ring-2 ring-blue-200' 
+            : 'border-gray-300 hover:border-blue-400'
+        }`}
+    >
+        <input 
+            type="radio" 
+            id={id}
+            name={name} 
+            value={value}
+            checked={checked === value}
+            onChange={(e) => onChange(e.target.value)}
+            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+        />
+        <span className="ml-3 text-sm font-medium text-gray-800">{label}</span>
+    </label>
+);
 
-// --- Main App Component ---
+const CompetencyChecker = () => {
+  const [familiarity, setFamiliarity] = useState('');
+  const [experience, setExperience] = useState('');
+  const [qualification, setQualification] = useState('');
+  const [result, setResult] = useState<CompetencyLevel | null>(null);
+  const [error, setError] = useState('');
 
-export default function App() {
-  const [summary, setSummary] = useState<string>('');
-  const [currentUrl, setCurrentUrl] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const calculateCompetency = (): CompetencyLevel | null => {
+    if (experience === 'none' || (experience === '<2' && (qualification === 'none' || qualification === 'basic') && (familiarity === 'no' || familiarity === 'somewhat'))) {
+        return competencyLevels['Trainee'];
+    }
+    if (experience === '<2' && (qualification === 'basic' || qualification === 'intermediate') && (familiarity === 'yes' || familiarity === 'somewhat')) {
+        return competencyLevels['Junior Practitioner'];
+    }
+    if (experience === '2-5' && qualification === 'intermediate' && familiarity === 'yes') {
+        return competencyLevels['Practitioner'];
+    }
+    if (experience === '5+' && qualification === 'advanced' && familiarity === 'yes') {
+        return competencyLevels['Senior Manager'];
+    }
+    if (experience === '10+' && qualification === 'advanced-specialist' && familiarity === 'yes') {
+        return competencyLevels['Specialist'];
+    }
+    if (experience === '2-5' || qualification === 'intermediate') {
+        return competencyLevels['Practitioner'];
+    }
+    if (experience === '<2') {
+        return competencyLevels['Junior Practitioner'];
+    }
+    return competencyLevels['Trainee'];
+  };
   
-  // Effect to add a simple fade-in animation class
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @keyframes fade-in {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-fade-in {
-        animation: fade-in 0.5s ease-out forwards;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-        document.head.removeChild(style);
-    };
-  }, []);
-
-  const handleSummarize = async (url: string) => {
-    setLoading(true);
-    setError('');
-    setSummary('');
-    setCurrentUrl(url);
-
-    const apiKey = ""; // 👈 PASTE YOUR OPENAI API KEY HERE
-
-    if (!apiKey) {
-      setError("API Key is missing. Please add your OpenAI API key to the 'apiKey' constant in the code.");
-      setLoading(false);
+  const handleVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!familiarity || !experience || !qualification) {
+      setError('Please complete all fields to determine your competency level.');
       return;
     }
-
-    try {
-      const apiUrl = `https://api.openai.com/v1/chat/completions`;
-      
-      const systemPrompt = "You are an expert summarizer. Provide a concise, easy-to-read summary of the given article URL. Focus on the key points and main takeaways.";
-      const userQuery = `Please summarize this article: ${url}`;
-      
-      const payload = {
-        model: "gpt-3.5-turbo",
-        messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userQuery }
-        ],
-      };
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error.message || `API request failed with status ${response.status}`);
-      }
-      
-      const result = await response.json();
-      
-      if (result.choices && result.choices.length > 0 && result.choices[0].message?.content) {
-          const generatedText = result.choices[0].message.content.trim();
-          setSummary(generatedText);
-      } else {
-        console.error("Unexpected API response structure:", result);
-        setError("Could not extract a valid summary from the API response.");
-      }
-
-    } catch (apiError) {
-        console.error("API Error:", apiError);
-        if (apiError instanceof Error) {
-          setError(`An error occurred: ${apiError.message}. Please check the URL or try again later.`);
-        } else {
-          setError("An unknown error occurred. Please try again later.");
-        }
-    } finally {
-        setLoading(false);
-    }
+    setError('');
+    const competencyResult = calculateCompetency();
+    setResult(competencyResult);
   };
 
-  return (
-    <div className="bg-gray-50 min-h-screen font-sans antialiased">
-      <Header />
-      <main className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-3xl">
-        <UrlForm onSubmit={handleSummarize} loading={loading} />
-        
-        <div className="mt-8">
-            {loading && <LoadingSpinner />}
-            {error && <ErrorDisplay message={error} />}
-            {summary && <SummaryDisplay summary={summary} originalUrl={currentUrl} />}
+  const PermissionIndicator = ({ status }: { status: string }) => {
+    if (status === 'yes' || status.includes('risk') || status === 'expert') {
+      return <span className="text-green-500 font-bold">✅ Authorised</span>;
+    }
+    if (status === 'assist' || status === 'low-medium') {
+      return <span className="text-yellow-500 font-bold">⚠️ Supervision Required</span>;
+    }
+    return <span className="text-red-500 font-bold">❌ Not Authorised</span>;
+  };
+  
+  const renderPermissionDetail = (permission: string, status: string) => {
+    let text = '';
+    switch(permission) {
+        case 'draft': text = 'Draft RAMS:'; break;
+        case 'review': text = 'Review RAMS:'; break;
+        case 'approve': text = 'Approve RAMS:'; break;
+        case 'audit': text = 'Audit & Oversight:'; break;
+    }
+    return (
+        <div className="flex justify-between items-center py-2 border-b border-gray-200">
+            <span className="text-gray-600">{text}</span>
+            <PermissionIndicator status={status} />
         </div>
-      </main>
+    );
+  }
+
+  return (
+    <div className="p-8 lg:p-12">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Let&apos;s Get Started</h2>
+        <p className="text-gray-600 mb-6">First, a quick check to personalize your experience.</p>
+        
+        {!result ? (
+        <form onSubmit={handleVerify} className="space-y-6">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">1. How familiar are you with your duties under CDM 2015?</label>
+                <div className="space-y-2">
+                    <RadioOption id="fam-yes" name="familiarity" value="yes" label="Yes - I fully understand my legal duties." checked={familiarity} onChange={setFamiliarity} />
+                    <RadioOption id="fam-somewhat" name="familiarity" value="somewhat" label="Somewhat familiar." checked={familiarity} onChange={setFamiliarity} />
+                    <RadioOption id="fam-no" name="familiarity" value="no" label="No - I need training." checked={familiarity} onChange={setFamiliarity} />
+                </div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">2. What is your level of experience creating/reviewing RAMS?</label>
+                <div className="space-y-2">
+                    <RadioOption id="exp-10+" name="experience" value="10+" label="10+ years (Specialist)" checked={experience} onChange={setExperience} />
+                    <RadioOption id="exp-5+" name="experience" value="5+" label="5+ years (Senior)" checked={experience} onChange={setExperience} />
+                    <RadioOption id="exp-2-5" name="experience" value="2-5" label="2–5 years (Practitioner)" checked={experience} onChange={setExperience} />
+                    <RadioOption id="exp-<2" name="experience" value="<2" label="Less than 2 years (Junior)" checked={experience} onChange={setExperience} />
+                    <RadioOption id="exp-none" name="experience" value="none" label="No formal experience" checked={experience} onChange={setExperience} />
+                </div>
+            </div>
+             <div>
+                <label htmlFor="qualification" className="block text-sm font-medium text-gray-700 mb-2">3. What is your primary safety qualification?</label>
+                <select id="qualification" name="qualification" value={qualification} onChange={(e) => setQualification(e.target.value)} className="mt-1 block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg shadow-sm">
+                    <option value="" disabled>Select your qualification...</option>
+                    <option value="none">No formal qualifications</option>
+                    <option value="basic">Basic Safety (e.g., Site Passport)</option>
+                    <option value="intermediate">Intermediate (e.g., IOSH MS, NEBOSH Cert)</option>
+                    <option value="advanced">Advanced (e.g., NEBOSH Diploma, CMIOSH)</option>
+                    <option value="advanced-specialist">Advanced + Specialist Training</option>
+                </select>
+            </div>
+
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+
+            <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300">
+                Check My Competency
+            </button>
+        </form>
+        ) : (
+        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 animate-fade-in">
+            <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">Your Competency Profile</h3>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{result.level}</p>
+            <p className="mt-4 text-center bg-blue-100 text-blue-800 p-4 rounded-md border border-blue-200">
+                &quot;{result.description}&quot;
+            </p>
+
+            <div className="mt-6">
+                <h4 className="font-semibold text-gray-700 mb-2">Your Permissions:</h4>
+                {renderPermissionDetail('draft', result.permissions.draft)}
+                {renderPermissionDetail('review', result.permissions.review)}
+                {renderPermissionDetail('approve', result.permissions.approve)}
+                {renderPermissionDetail('audit', result.permissions.audit)}
+            </div>
+
+            <button onClick={() => alert('Proceeding to the next step!')} className="mt-8 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300">
+                Proceed to RAMS Template
+            </button>
+             <button onClick={() => setResult(null)} className="mt-2 w-full text-sm text-gray-600 hover:text-blue-600 text-center">
+                Re-check Competency
+            </button>
+        </div>
+        )}
+    </div>
+  );
+}
+
+
+// --- Main Page Component ---
+export default function NewRamsPage() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+      <div className="w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+        
+        {/* --- Left Column: Value Proposition --- */}
+        <div className="p-8 lg:p-12 bg-blue-600 text-white flex flex-col">
+          <div>
+            <h1 className="text-3xl lg:text-4xl font-bold mb-4">The Smarter Way to Create Compliant RAMS</h1>
+            <p className="text-sm text-blue-300 mb-8">Developed by Hanniel Solutions</p>
+            <p className="text-lg text-blue-100 mb-8">
+              Our guided tool helps you generate professional, CDM 2015-compliant Risk Assessments and Method Statements. Save time, reduce paperwork, and keep your team safe.
+            </p>
+            <ul className="space-y-6 text-lg">
+              <li className="flex items-center">
+                <ClockIcon />
+                <div>
+                  <h3 className="font-semibold">Save Time</h3>
+                  <p className="text-blue-200 text-base">Generate documents in a fraction of the time.</p>
+                </div>
+              </li>
+              <li className="flex items-center">
+                <ShieldCheckIcon />
+                <div>
+                  <h3 className="font-semibold">Ensure Compliance</h3>
+                  <p className="text-blue-200 text-base">Stay aligned with current HSE regulations.</p>
+                </div>
+              </li>
+              <li className="flex items-center">
+                <DocumentTextIcon />
+                 <div>
+                  <h3 className="font-semibold">Professional Output</h3>
+                  <p className="text-blue-200 text-base">Export your RAMS as clean, branded PDF documents.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div className="mt-auto pt-8">
+            <p className="text-xs text-blue-300 text-center">
+                &copy; {new Date().getFullYear()} Hanniel Solutions. All Rights Reserved. This tool is proprietary intellectual property.
+            </p>
+          </div>
+        </div>
+
+        {/* --- Right Column: Interactive Module --- */}
+        <CompetencyChecker />
+
+      </div>
     </div>
   );
 }

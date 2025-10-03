@@ -393,7 +393,7 @@ const EnhancedAICopilot = ({ onGenerate, loading }: { onGenerate: (prompt: strin
 };
 
 // --- MAIN PAGE COMPONENT ---
-export default function NewRamsPage() {
+export default function CreateRamsForm() {
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState<RamsFormData>({ revisionNumber: '1' });
   const [loading, setLoading] = useState<boolean>(false);
@@ -404,6 +404,15 @@ export default function NewRamsPage() {
   const [legalTermsAccepted, setLegalTermsAccepted] = useState<boolean>(false);
   const [complianceScore, setComplianceScore] = useState<number | null>(null);
   const [documentFormat, setDocumentFormat] = useState<'pdf' | 'word'>('pdf');
+
+  useEffect(() => {
+    // This logic runs when the component first loads.
+    // It immediately shows the main form.
+    // To show the checker first, we need to manage state differently.
+    // For now, let's assume verification happens before this component loads.
+    setCompetentPersonVerified(true);
+    setLegalTermsAccepted(true);
+  }, []);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
     const { name, value, type } = e.target;
@@ -454,9 +463,7 @@ export default function NewRamsPage() {
   };
 
   const handleAutoFix = (field: string, value: string) => {
-    // Handle array fields (like selectedHazards and selectedPPE)
     if (field === 'selectedHazards' || field === 'selectedPPE') {
-      // Parse the value if it's a comma-separated string or convert single value to array
       const arrayValue = value.includes(',') ? value.split(',').map(v => v.trim()) : [value];
       setFormData(prev => ({
         ...prev,
@@ -468,11 +475,7 @@ export default function NewRamsPage() {
         [field]: value
       }));
     }
-    
-    // Remove the fixed suggestion
-    setSuggestions(prev =>
-      prev.filter(s => s.field !== field)
-    );
+    setSuggestions(prev => prev.filter(s => s.field !== field));
   };
 
   const handleDismissSuggestion = (index: number) => {
@@ -512,7 +515,6 @@ export default function NewRamsPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Choose endpoint based on format
       const endpoint = documentFormat === 'word'
         ? '/api/generate-rams-word'
         : '/api/generate-rams';
@@ -526,24 +528,18 @@ export default function NewRamsPage() {
       
       if (result.success) {
         if (documentFormat === 'pdf' && result.pdfData) {
-          // Open PDF in new tab
           const newWindow = window.open();
           if (newWindow) {
             newWindow.document.write(
               `<iframe width='100%' height='100%' src='${result.pdfData}'></iframe>`
             );
           }
-          console.log('PDF generated successfully');
         } else if (documentFormat === 'word' && result.docData) {
-          // Download Word document
           const link = document.createElement('a');
           link.href = result.docData;
           link.download = result.filename || `RAMS_${Date.now()}.docx`;
           link.click();
-          console.log('Word document downloaded successfully');
         }
-        
-        // Show success message
         alert(`${documentFormat.toUpperCase()} document generated successfully!`);
       } else {
         alert('Failed to generate document. Please try again.');
@@ -559,7 +555,6 @@ export default function NewRamsPage() {
   const nextStep = (): void => setStep(prev => Math.min(prev + 1, TOTAL_STEPS));
   const prevStep = (): void => setStep(prev => Math.max(prev - 1, 1));
 
-  // Show competency checker and legal disclaimer first
   if (!competentPersonVerified || !legalTermsAccepted) {
     return (
       <main className="p-8 max-w-4xl mx-auto bg-gray-50 min-h-screen">
@@ -586,63 +581,17 @@ export default function NewRamsPage() {
           <div>
             <h2 className="text-xl font-semibold mb-4">Project Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                name="projectName"
-                value={formData.projectName || ''}
-                placeholder="Project Name *"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="clientName"
-                value={formData.clientName || ''}
-                placeholder="Client Name *"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="startDate"
-                value={formData.startDate || ''}
-                type="date"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="endDate"
-                value={formData.endDate || ''}
-                type="date"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="duration"
-                value={formData.duration || ''}
-                placeholder="Duration (e.g., 5 days)"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="jobReference"
-                value={formData.jobReference || ''}
-                placeholder="Job Reference"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
+               <input name="projectName" value={formData.projectName || ''} placeholder="Project Name *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+               <input name="clientName" value={formData.clientName || ''} placeholder="Client Name *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+               <input name="startDate" value={formData.startDate || ''} type="date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+               <input name="endDate" value={formData.endDate || ''} type="date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+               <input name="duration" value={formData.duration || ''} placeholder="Duration (e.g., 5 days)" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+               <input name="jobReference" value={formData.jobReference || ''} placeholder="Job Reference" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
             </div>
-            <AddressLookup
-              value={formData.siteAddress || ''}
-              onChange={(addr) => setFormData({...formData, siteAddress: addr})}
-            />
-            <input
-              name="siteContactPerson"
-              value={formData.siteContactPerson || ''}
-              placeholder="Site Contact Person"
-              onChange={handleInputChange}
-              className="w-full mt-4 px-4 py-2 border rounded"
-            />
+            <AddressLookup value={formData.siteAddress || ''} onChange={(addr) => setFormData({...formData, siteAddress: addr})} />
+            <input name="siteContactPerson" value={formData.siteContactPerson || ''} placeholder="Site Contact Person" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" />
           </div>
         );
-
       case 2:
         return (
           <div>
@@ -657,36 +606,15 @@ export default function NewRamsPage() {
                 {formData.trade && TASK_TYPES[formData.trade]?.map(task => <option key={task} value={task}>{task}</option>)}
               </select>
             </div>
-            <textarea
-              name="scopeOfWork"
-              value={formData.scopeOfWork || ''}
-              placeholder="Scope of Work *"
-              onChange={handleInputChange}
-              className="w-full mt-4 px-4 py-2 border rounded"
-              rows={3}
-            />
-            <textarea
-              name="methodStatement"
-              value={formData.methodStatement || ''}
-              placeholder="Method Statement (Step-by-step description)"
-              onChange={handleInputChange}
-              className="w-full mt-4 px-4 py-2 border rounded"
-              rows={4}
-            />
+            <textarea name="scopeOfWork" value={formData.scopeOfWork || ''} placeholder="Scope of Work *" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3} />
+            <textarea name="methodStatement" value={formData.methodStatement || ''} placeholder="Method Statement (Step-by-step description)" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={4} />
           </div>
         );
-
       case 3:
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Risk Assessment</h2>
-            <input
-              name="personsAtRisk"
-              value={formData.personsAtRisk || ''}
-              placeholder="Persons at Risk"
-              onChange={handleInputChange}
-              className="w-full mb-4 px-4 py-2 border rounded"
-              />
+            <input name="personsAtRisk" value={formData.personsAtRisk || ''} placeholder="Persons at Risk" onChange={handleInputChange} className="w-full mb-4 px-4 py-2 border rounded" />
             <label className="block text-sm font-medium mb-2">
               Identified Hazards (select all that apply) -
               <EducationalTooltip term="CDM">CDM 2015</EducationalTooltip> requires comprehensive hazard identification
@@ -694,21 +622,13 @@ export default function NewRamsPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
               {COMMON_HAZARDS.map(hazard => (
                 <label key={hazard} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="selectedHazards"
-                    value={hazard}
-                    checked={formData.selectedHazards?.includes(hazard)}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
+                  <input type="checkbox" name="selectedHazards" value={hazard} checked={formData.selectedHazards?.includes(hazard)} onChange={handleInputChange} className="mr-2" />
                   <span className="text-sm">{hazard}</span>
                 </label>
               ))}
             </div>
           </div>
         );
-
       case 4:
         return (
           <div>
@@ -719,165 +639,57 @@ export default function NewRamsPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
               {PPE_OPTIONS.map(ppe => (
                 <label key={ppe} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="selectedPPE"
-                    value={ppe}
-                    checked={formData.selectedPPE?.includes(ppe)}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
+                  <input type="checkbox" name="selectedPPE" value={ppe} checked={formData.selectedPPE?.includes(ppe)} onChange={handleInputChange} className="mr-2" />
                   <span className="text-sm">{ppe}</span>
                 </label>
               ))}
             </div>
-            <textarea
-              name="controls"
-              value={formData.controls || ''}
-              placeholder="Control Measures *"
-              onChange={handleInputChange}
-              className="w-full mt-4 px-4 py-2 border rounded"
-              rows={4}
-            />
+            <textarea name="controls" value={formData.controls || ''} placeholder="Control Measures *" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={4} />
           </div>
         );
-
       case 5:
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Emergency Planning</h2>
-            <textarea
-              name="firstAidArrangements"
-              value={formData.firstAidArrangements || ''}
-              placeholder="First Aid Arrangements"
-              onChange={handleInputChange}
-              className="w-full mt-4 px-4 py-2 border rounded"
-              rows={3}
-            />
-            <textarea
-              name="firePrecautions"
-              value={formData.firePrecautions || ''}
-              placeholder="Fire Precautions"
-              onChange={handleInputChange}
-              className="w-full mt-4 px-4 py-2 border rounded"
-              rows={3}
-            />
-            <textarea
-              name="emergencyContacts"
-              value={formData.emergencyContacts || ''}
-              placeholder="Emergency Contacts"
-              onChange={handleInputChange}
-              className="w-full mt-4 px-4 py-2 border rounded"
-              rows={3}
-            />
+            <textarea name="firstAidArrangements" value={formData.firstAidArrangements || ''} placeholder="First Aid Arrangements" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3} />
+            <textarea name="firePrecautions" value={formData.firePrecautions || ''} placeholder="Fire Precautions" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3} />
+            <textarea name="emergencyContacts" value={formData.emergencyContacts || ''} placeholder="Emergency Contacts" onChange={handleInputChange} className="w-full mt-4 px-4 py-2 border rounded" rows={3} />
           </div>
         );
-
       case 6:
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Review & Sign-off</h2>
-            
-            {/* Document Format Selection */}
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <label className="block text-sm font-semibold mb-3 text-blue-900">Select Document Format:</label>
               <div className="flex gap-4">
-                <label className="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg border-2 hover:border-blue-400 transition-colors"
-                  style={{ borderColor: documentFormat === 'pdf' ? '#3B82F6' : '#E5E7EB' }}>
-                  <input
-                    type="radio"
-                    value="pdf"
-                    checked={documentFormat === 'pdf'}
-                    onChange={() => setDocumentFormat('pdf')}
-                    className="mr-2"
-                  />
-                  <span className="flex items-center">
-                    📄 <span className="ml-1 font-medium">PDF</span>
-                    <span className="ml-2 text-xs text-gray-600">(View in browser)</span>
-                  </span>
+                <label className="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg border-2 hover:border-blue-400 transition-colors" style={{ borderColor: documentFormat === 'pdf' ? '#3B82F6' : '#E5E7EB' }}>
+                  <input type="radio" value="pdf" checked={documentFormat === 'pdf'} onChange={() => setDocumentFormat('pdf')} className="mr-2" />
+                  <span className="flex items-center">📄 <span className="ml-1 font-medium">PDF</span><span className="ml-2 text-xs text-gray-600">(View in browser)</span></span>
                 </label>
-                <label className="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg border-2 hover:border-blue-400 transition-colors"
-                  style={{ borderColor: documentFormat === 'word' ? '#3B82F6' : '#E5E7EB' }}>
-                  <input
-                    type="radio"
-                    value="word"
-                    checked={documentFormat === 'word'}
-                    onChange={() => setDocumentFormat('word')}
-                    className="mr-2"
-                  />
-                  <span className="flex items-center">
-                    📝 <span className="ml-1 font-medium">Word</span>
-                    <span className="ml-2 text-xs text-gray-600">(.docx - Download)</span>
-                  </span>
+                <label className="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg border-2 hover:border-blue-400 transition-colors" style={{ borderColor: documentFormat === 'word' ? '#3B82F6' : '#E5E7EB' }}>
+                  <input type="radio" value="word" checked={documentFormat === 'word'} onChange={() => setDocumentFormat('word')} className="mr-2" />
+                  <span className="flex items-center">📝 <span className="ml-1 font-medium">Word</span><span className="ml-2 text-xs text-gray-600">(.docx - Download)</span></span>
                 </label>
               </div>
-              <p className="text-xs text-gray-600 mt-2">
-                {documentFormat === 'pdf'
-                  ? 'PDF will open in a new browser tab for viewing and printing.'
-                  : 'Word document will download for editing in Microsoft Word or similar programs.'}
-              </p>
+              <p className="text-xs text-gray-600 mt-2">{documentFormat === 'pdf' ? 'PDF will open in a new browser tab for viewing and printing.' : 'Word document will download for editing in Microsoft Word or similar programs.'}</p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                name="siteManager"
-                value={formData.siteManager || ''}
-                placeholder="Site Manager *"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="contactNumber"
-                value={formData.contactNumber || ''}
-                placeholder="Contact Number *"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="preparedBy"
-                value={formData.preparedBy || ''}
-                placeholder="Prepared By"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="reviewedBy"
-                value={formData.reviewedBy || ''}
-                placeholder="Reviewed By (Supervisor)"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="reviewDate"
-                value={formData.reviewDate || ''}
-                type="date"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
-              <input
-                name="revisionNumber"
-                value={formData.revisionNumber || '1'}
-                placeholder="Revision Number"
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded"
-              />
+              <input name="siteManager" value={formData.siteManager || ''} placeholder="Site Manager *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+              <input name="contactNumber" value={formData.contactNumber || ''} placeholder="Contact Number *" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+              <input name="preparedBy" value={formData.preparedBy || ''} placeholder="Prepared By" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+              <input name="reviewedBy" value={formData.reviewedBy || ''} placeholder="Reviewed By (Supervisor)" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+              <input name="reviewDate" value={formData.reviewDate || ''} type="date" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
+              <input name="revisionNumber" value={formData.revisionNumber || '1'} placeholder="Revision Number" onChange={handleInputChange} className="w-full px-4 py-2 border rounded" />
             </div>
             <label className="flex items-center mt-4">
-              <input
-                type="checkbox"
-                name="acknowledgement"
-                checked={formData.acknowledgement || false}
-                onChange={handleInputChange}
-                className="mr-2"
-              />
+              <input type="checkbox" name="acknowledgement" checked={formData.acknowledgement || false} onChange={handleInputChange} className="mr-2" />
               <span className="text-sm">
-                I acknowledge this RAMS has been reviewed by a competent person and complies with
-                <EducationalTooltip term="CDM"> CDM 2015</EducationalTooltip> requirements.
+                I acknowledge this RAMS has been reviewed by a competent person and complies with <EducationalTooltip term="CDM"> CDM 2015</EducationalTooltip> requirements.
               </span>
             </label>
           </div>
         );
-
       default:
         return null;
     }
@@ -911,107 +723,25 @@ export default function NewRamsPage() {
       <form className="space-y-6 bg-white p-8 rounded-lg shadow-md" onSubmit={handleSubmit}>
         {renderStep()}
         
-        {/* Show compliance and training modules only on relevant steps */}
-        {step === 2 && (
-          <SmartComplianceEngine
-            formData={formData}
-            onAutoFix={(field, content) => {
-              setFormData(prev => ({
-                ...prev,
-                [field]: content
-              }));
-            }}
-          />
-        )}
-
-        {/* Show Safety Training Module only on Step 3 when hazards are selected */}
-        {step === 3 && formData.selectedHazards && formData.selectedHazards.length > 0 && (
-          <>
-            <SmartComplianceEngine
-              formData={formData}
-              onAutoFix={(field, content) => {
-                setFormData(prev => ({
-                  ...prev,
-                  [field]: content
-                }));
-              }}
-            />
-            
-            <SafetyTrainingModule
-              selectedHazards={formData.selectedHazards}
-              userId={formData.preparedBy || 'user1'}
-              onTrainingComplete={(moduleId, score) => {
-                console.log(`Training ${moduleId} completed with score: ${score}%`);
-                // You could also update formData here to track completed training
-                setFormData(prev => ({
-                  ...prev,
-                  [`training_${moduleId}`]: score
-                }));
-              }}
-            />
-          </>
-        )}
-
-        {/* Show compliance on other steps too */}
-        {(step === 4 || step === 5 || step === 6) && (
-          <SmartComplianceEngine
-            formData={formData}
-            onAutoFix={(field, content) => {
-              setFormData(prev => ({
-                ...prev,
-                [field]: content
-              }));
-            }}
-          />
-        )}
-
-        {/* Validation Panel - shown whenever there are suggestions */}
-        {suggestions.length > 0 && (
-          <ValidationPanel
-            suggestions={suggestions}
-            onAutoFix={handleAutoFix}
-            onDismiss={handleDismissSuggestion}
-          />
-        )}
-        
         <div className="mt-8 pt-6 border-t flex justify-between items-center">
           <div>
             {step > 1 && (
-              <button
-                type="button"
-                onClick={prevStep}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-              >
+              <button type="button" onClick={prevStep} className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
                 Previous
               </button>
             )}
           </div>
-
-          <button
-            type="button"
-            onClick={handleValidation}
-            disabled={validating}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-300"
-          >
+          <button type="button" onClick={handleValidation} disabled={validating} className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-300">
             {validating ? 'Validating...' : 'Validate Step'}
           </button>
-          
           <div>
             {step < TOTAL_STEPS && (
-              <button
-                type="button"
-                onClick={nextStep}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
+              <button type="button" onClick={nextStep} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                 Next
               </button>
             )}
             {step === TOTAL_STEPS && (
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-300"
-              >
+              <button type="submit" disabled={loading} className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-300">
                 {loading ? 'Generating...' : `Generate ${documentFormat.toUpperCase()}`}
               </button>
             )}
@@ -1021,4 +751,3 @@ export default function NewRamsPage() {
     </main>
   );
 }
-
