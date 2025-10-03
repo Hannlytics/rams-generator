@@ -1,9 +1,6 @@
 'use client';
 import React, { useState, ChangeEvent, useRef, useEffect } from 'react';
 
-// Import the CompetencyChecker component
-import CompetencyChecker from '../components/CompetencyChecker';
-
 // --- TYPE DEFINITIONS ---
 interface SpeechRecognitionResult {
   [index: number]: SpeechRecognitionAlternative;
@@ -143,8 +140,15 @@ const EducationalTooltip: React.FC<{ term: string, children: React.ReactNode }> 
     </span>
 );
 
-// NOTE: CompetencyChecker component has been removed from here 
-// and is now imported from ../components/CompetencyChecker
+const CompetencyChecker: React.FC<{ onVerified: (isVerified: boolean) => void; }> = ({ onVerified }) => (
+    <div className="p-4 my-4 border rounded bg-gray-100">
+        <p className="font-bold">Competency Checker</p>
+        <p className="text-sm">Please confirm you are a competent person to create this document.</p>
+        <button onClick={() => onVerified(true)} className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+            I Confirm I Am Competent
+        </button>
+    </div>
+);
 
 const ResponsibleAIBanner: React.FC = () => (
     <div className="p-2 mb-4 text-center text-xs bg-gray-100 text-gray-600 rounded">
@@ -745,3 +749,4 @@ export default function CreateRamsForm() {
     </main>
   );
 }
+
