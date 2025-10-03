@@ -93,9 +93,7 @@ declare global {
   }
 }
 
-// --- PLACEHOLDER COMPONENTS ---
-// In a real multi-file application, these would be in separate files.
-// For this single-file environment, they are defined here to resolve import errors.
+// --- IN-FILE COMPONENTS (to prevent import errors) ---
 
 const AddressLookup: React.FC<{ value: string; onChange: (addr: string) => void; }> = ({ value, onChange }) => (
     <div className="my-4">
